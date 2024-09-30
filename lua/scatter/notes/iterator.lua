@@ -10,18 +10,42 @@ function NotesIterator:new()
 
 	obj.handle = vim.loop.fs_scandir(config.notes_path)
 	if not obj.handle then
-		error("directory not found: " .. path)
+		error("directory not found: " .. config.notes_path)
 	end
+
+	return obj
 end
 
 function NotesIterator:next_name()
-	local name, _ = vim.loop.fs_scandir_next(self.handle)
-	return name
+	while true do
+		local name, type = vim.loop.fs_scandir_next(self.handle)
+
+		if name == nil then
+			return nil
+		end
+
+		if type == 'file' and string.find(name, "%.md$") then
+			return name
+		end
+	end
 end
 
 function NotesIterator:next_note()
-	local name, type = vim.loop.fs_scandir_next(self.handle)
-	print()
+	local name = self:next_name()
+	if name == nil then
+		return nil
+	end
+	return Note:load(name)
+end
+
+function NotesIterator:collect_notes(notes)
+	while true do
+		local note = self:next_note()
+		if not note then
+			return
+		end
+		table.insert(notes, note)
+	end
 end
 
 return NotesIterator

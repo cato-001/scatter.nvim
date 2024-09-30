@@ -3,43 +3,69 @@ local finders = require('telescope.finders')
 local previewers = require('telescope.previewers')
 local config = require('telescope.config').values
 
+local NotesIterator = require('scatter.notes.iterator')
+
+local _callable_obj = function()
+	local obj = {}
+
+	obj.__index = obj
+	obj.__call = function(t, ...)
+		return t:_find(...)
+	end
+
+	obj.close = function() end
+
+	return obj
+end
+
+local NotesFinder = _callable_obj()
+
+function NotesFinder:new(filters)
+	filters = filters or {}
+
+	local finder = setmetatable({
+		notes = {}
+	}, self)
+
+	local iter = NotesIterator:new()
+	while true do
+		local note = iter:next_note()
+		if not note then
+			break
+		end
+		if note:match_all(filters) then
+			table.insert(finder.notes, note)
+		end
+	end
+
+	return finder
+end
+
+function NotesFinder:_find(prompt, process_result, process_complete)
+	local needles = {}
+	for needle in prompt:gmatch('%S+') do
+		table.insert(needles, needle)
+	end
+
+	for _, note in ipairs(self.notes) do
+		if note:match_all(needles) then
+			local tags = note:join_tags(' ')
+			process_result({
+				value = note.name,
+				display = tags,
+				ordinal = tags,
+				path = note.path
+			})
+		end
+	end
+
+	process_complete()
+end
+
 local function notes_search_picker(opts)
 	opts = opts or {}
 
-	local finder = finders.new_job(
-		function(prompt)
-			if prompt == nil or prompt == "" then
-				return { "scatternotes", "--plain", "list", "--tags" }
-			end
-
-			local command = { "scatternotes", "--plain", "search" }
-			for tag in prompt:gmatch("%S+") do
-				table.insert(command, tag)
-			end
-			table.insert(command, "--tags")
-
-			return command
-		end,
-		function(entry)
-			local file = nil
-			local tags = ""
-
-			for item in entry:gmatch('[^|]+') do
-				if not file then
-					file = item
-				else
-					tags = item
-				end
-			end
-
-			return {
-				value = file,
-				display = tags,
-				ordinal = tags,
-				path = file
-			}
-		end
-	)
+	local finder = NotesFinder:new(opts['filters'])
 	local sorter = config.generic_sorter(opts)
 	local previewer = previewers.new_termopen_previewer({
 		get_command = function(entry)
@@ -55,10 +81,6 @@ local function notes_search_picker(opts)
 	}):find()
 end
 
-local function search_note()
-	notes_search_picker()
-end
-
 return {
-	search_note = search_note
+	search_note = notes_search_picker
 }
