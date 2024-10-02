@@ -83,6 +83,7 @@ end
 function Note:_update_tags()
 	util.table_clear(self.tags)
 	for tag in string.gmatch(self.content, TAG_PATTERN) do
+		tag = string.lower(tag)
 		table.insert(self.tags, tag)
 	end
 	util.table_sort_without_duplicates(self.tags)
