@@ -7,4 +7,5 @@ return function(opts)
 	clean.update_synonyms()
 	clean.unify_timestamps()
 	clean.split_notes()
+	clean.run_dprint()
 end

@@ -1,3 +1,4 @@
+local config = require('scatter.config')
 local NotesIterator = require('scatter.notes.iterator')
 local Synonyms = require('scatter.notes.synonyms')
 local load_all_tags = require('scatter.notes.tag').load_all_tags
@@ -62,6 +63,16 @@ M.split_notes = function()
 			note:delete()
 		end
 	end
+end
+
+M.run_dprint = function()
+	if vim.fn.executable('dprint') == 0 then
+		error('dprint is not installed')
+	end
+
+	vim.system({ 'dprint', 'fmt' }, {
+		cwd = config.path,
+	})
 end
 
 return M

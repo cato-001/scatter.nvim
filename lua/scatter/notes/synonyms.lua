@@ -17,7 +17,7 @@ function Synonyms:load()
 	local content = file:read('*a')
 	file:close()
 
-	for part in vim.gsplit(content, '---') do
+	for part in vim.gsplit(content, '===') do
 		if part ~= '' then
 			local synonym = {}
 			for item in part:gmatch('[^%s]+') do
@@ -41,7 +41,7 @@ function Synonyms:save()
 		error("could not save synonyms")
 	end
 	for _, synonyms in ipairs(self.values) do
-		file:write('---\n')
+		file:write('===\n')
 		for _, synonym in ipairs(synonyms) do
 			file:write(synonym)
 			file:write('\n')

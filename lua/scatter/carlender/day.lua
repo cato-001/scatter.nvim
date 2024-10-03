@@ -1,21 +1,23 @@
 local config = require('scatter.config')
+local util = require('scatter.util')
 
 local Day = {}
 
 function Day:new(date)
-	local day = {}
-	setmetatable(day, self)
-	self.__index = self
-
-	day.date = date
-
-	day.year, day.month, day.day = string.gmatch(date, '(%d+)%-(%d+)%-(%d+)')
-	day.year = tonumber(day.year)
-	day.month = tonumber(day.month)
-	day.day = tonumber(day.day)
-
-	day.path = vim.fs.joinpath(
+	local year, month, day = string.gmatch(date, '(%d+)%-(%d+)%-(%d+)')
+	local path = vim.fs.joinpath(
 		config.carlender_path, 'year-' .. day.year, 'month-' .. day.month, 'day-' .. day.day .. '.md')
+
+	local day = setmetatable({
+		date = date,
+		year = tonumber(year),
+		month = tonumber(month),
+		day = tonumber(day),
+		path = path,
+		content = "",
+		appointments = {},
+	}, self)
+	self.__index = self
 
 	return day
 end
@@ -40,7 +42,11 @@ end
 
 function Day:file_exists()
 	local stat = vim.loop.fs_stat(self.path)
-	return stat != nil
+	return stat ~= nil
+end
+
+function Day:_parse_appointments()
+	util.table_clear(self.appointments)
 end
 
 return Day

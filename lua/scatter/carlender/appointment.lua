@@ -1,6 +1,6 @@
 local Appointment = {}
 
-function parseTimes(line)
+local function parseTimes(line)
 	local hour, minute, raw_duration = string.match(line, '^(%d%d?):?(%d%d)?%s*([^%s].*[^%s])?%s*$')
 	hour = tonumber(hour)
 	minute = tonumber(minute)
@@ -32,17 +32,22 @@ function parseTimes(line)
 end
 
 function Appointment:new(opts)
-	local appointment = setmetatable({}, self)
+	local appointment = setmetatable({
+		start = opts.start,
+		duration = opts.duration,
+		comment = opts.comment,
+	}, self)
 	self.__index = self
-
-	appointment.start = opts.start
-	appointment.duration = opts.duration
-	appointment.comment = opts.comment
 
 	return appointment
 end
 
-function Appointment:parse(content)
+function Appointment:take_parse(lines)
+	local first = table.remove(lines, 1)
+	local times = parseTimes(first)
+	while true do
+		local line = table.remove(lines, 1)
+	end
 end
 
 return Appointment
