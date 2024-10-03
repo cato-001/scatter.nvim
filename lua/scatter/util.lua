@@ -1,3 +1,5 @@
+local config = require('scatter.config')
+
 local M = {}
 
 M.table_clear = function(values)
@@ -17,6 +19,13 @@ M.table_sort_without_duplicates = function(values)
 		end
 		prev = item
 	end
+end
+
+M.is_scatter_file = function(path)
+	if string.find(path, config.path) then
+		return true
+	end
+	return false
 end
 
 return M

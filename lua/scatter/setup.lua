@@ -1,5 +1,7 @@
 local notes_setup = require('scatter.notes.setup')
 local clean = require('scatter.notes.clean')
+local edit = require('scatter.edit')
+local util = require('scatter.util')
 
 return function(opts)
 	notes_setup(opts['notes'])
@@ -7,5 +9,13 @@ return function(opts)
 	clean.update_synonyms()
 	clean.unify_timestamps()
 	clean.split_notes()
-	clean.run_dprint()
+
+	edit.buf_write_post(function(opts)
+		local path = opts['file']
+		if not util.is_scatter_file(path) then
+			return
+		end
+		clean.run_dprint()
+		edit.reload_file()
+	end)
 end

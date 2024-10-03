@@ -1,9 +1,11 @@
 local util = require('scatter.util')
 local config = require('scatter.config')
+local edit = require('scatter.edit')
 local generate_name = require('scatter.notes.name').generate
 
 local TAG_PATTERN = '#[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]'
 local ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]'
+local PERSON_PATTERN = '@[a-zA-Z][a-zA-Z-_]+[a-zA-Z]'
 
 local Note = {}
 
@@ -65,19 +67,7 @@ end
 
 function Note:edit()
 	self:save()
-
-	vim.cmd('vertical edit ' .. self.path)
-
-	local window = vim.api.nvim_get_current_win()
-	vim.api.nvim_win_set_width(window, vim.o.columns)
-	vim.api.nvim_win_set_height(window, vim.o.lines)
-
-	local buffer = vim.api.nvim_get_current_buf()
-	vim.api.nvim_create_autocmd('BufWritePre', {
-		buffer = buffer,
-		callback = function()
-		end
-	})
+	edit.edit_file(self.path)
 end
 
 function Note:_update_tags()
