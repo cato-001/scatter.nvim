@@ -10,12 +10,14 @@ return function(opts)
 	clean.unify_timestamps()
 	clean.split_notes()
 
-	edit.buf_write_post(function(opts)
-		local path = opts['file']
-		if not util.is_scatter_file(path) then
-			return
+	vim.api.nvim_create_autocmd('BufWritePost', {
+		callback = function(opts)
+			local path = opts['file']
+			if not util.is_scatter_file(path) then
+				return
+			end
+			clean.run_dprint()
+			edit.reload_file()
 		end
-		clean.run_dprint()
-		edit.reload_file()
-	end)
+	})
 end
