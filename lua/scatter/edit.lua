@@ -15,18 +15,4 @@ M.reload_file = function(path)
 	vim.cmd.edit(path)
 end
 
-M.buf_write_pre = function(callback, buffer)
-	buffer = buffer or vim.api.nvim_get_current_buf()
-	vim.api.nvim_create_autocmd('BufWritePre', {
-		buffer = buffer,
-		callback = callback,
-	})
-end
-
-M.buf_write_post = function(callback)
-	vim.api.nvim_create_autocmd('BufWritePost', {
-		callback = callback
-	})
-end
-
 return M
