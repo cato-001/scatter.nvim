@@ -1,7 +1,7 @@
 local pickers = require('telescope.pickers')
-local finders = require('telescope.finders')
 local previewers = require('telescope.previewers')
 local config = require('telescope.config').values
+local Synonyms = require('scatter.notes.synonyms')
 
 local NotesIterator = require('scatter.notes.iterator')
 
@@ -24,7 +24,8 @@ function NotesFinder:new(filters)
 	filters = filters or {}
 
 	local finder = setmetatable({
-		notes = {}
+		notes = {},
+		synonyms = Synonyms:load(),
 	}, self)
 
 	local iter = NotesIterator:new()
@@ -43,8 +44,10 @@ end
 
 function NotesFinder:_find(prompt, process_result, process_complete)
 	local needles = {}
-	for needle in prompt:gmatch('%S+') do
+	for needle in prompt:gmatch('[^%s]+') do
 		table.insert(needles, needle)
+		-- local _, synonyms = self.synonyms:find(needle)
+		-- vim.list_extend(needles, synonyms)
 	end
 
 	for _, note in ipairs(self.notes) do

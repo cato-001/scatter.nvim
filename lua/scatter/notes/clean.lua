@@ -12,7 +12,7 @@ M.update_synonyms = function()
 	synonyms:remove_unused(tags)
 	local add_synonyms = {}
 	for _, tag in ipairs(tags) do
-		if not synonyms:get_for_tag(tag) then
+		if not synonyms:get(tag) then
 			table.insert(add_synonyms, { tag })
 		end
 	end

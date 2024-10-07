@@ -66,13 +66,26 @@ function Synonyms:remove_unused(tags)
 	end
 end
 
-function Synonyms:get_for_tag(tag)
+function Synonyms:get(tag)
 	for _, synonym in ipairs(self.values) do
 		if vim.list_contains(synonym, tag) then
 			return true, synonym
 		end
 	end
 	return false, {}
+end
+
+function Synonyms:find(needle)
+	local result = {}
+	for _, synonym in ipairs(self.values) do
+		for _, item in ipairs(synonym) do
+			if string.find(item, needle, nil, true) then
+				vim.list_extend(result, synonym)
+				break
+			end
+		end
+	end
+	return #result ~= 0, result
 end
 
 return Synonyms

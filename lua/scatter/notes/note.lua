@@ -113,7 +113,7 @@ end
 
 function Note:match(needle)
 	for _, tag in ipairs(self.tags) do
-		if string.find(tag, needle) then
+		if string.find(tag, needle, nil, true) then
 			return true
 		end
 	end

@@ -1,18 +1,19 @@
+local edit = require('scatter.edit')
 local config = require('scatter.config')
 local util = require('scatter.util')
 
 local Day = {}
 
 function Day:new(date)
-	local year, month, day = string.gmatch(date, '(%d+)%-(%d+)%-(%d+)')
+	local date_year, date_month, date_day = date:match('(%d+)%-(%d+)%-(%d+)')
 	local path = vim.fs.joinpath(
-		config.carlender_path, 'year-' .. day.year, 'month-' .. day.month, 'day-' .. day.day .. '.md')
+		config.carlender_path, 'year-' .. date_year, 'month-' .. date_month, 'day-' .. date_day .. '.md')
 
 	local day = setmetatable({
 		date = date,
-		year = tonumber(year),
-		month = tonumber(month),
-		day = tonumber(day),
+		year = tonumber(date_year),
+		month = tonumber(date_month),
+		day = tonumber(date_day),
 		path = path,
 		content = "",
 		appointments = {},
@@ -38,6 +39,14 @@ end
 function Day:today()
 	local date = os.date('%Y-%m-%d')
 	return Day:new(date)
+end
+
+function Day:save()
+end
+
+function Day:edit()
+	self:save()
+	edit.edit_file(self.path)
 end
 
 function Day:file_exists()
