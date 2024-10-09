@@ -174,14 +174,21 @@ function Note:run_code()
 	for code_block in string.gmatch(self.content, '%s*```[^%s]+%s*~run[^`]+```') do
 		local lang, code = string.match(code_block, '```([^%s]+)%s*~run%s+(.+)```')
 
-		local output = ''
-		if lang == 'bash' then
-			output = vim.fn.system({ 'bash', '-c', code })
-		elseif lang == 'python' then
-			output = vim.fn.system({ 'python3', '-c', code })
+		local command = nil
+		if lang == 'sh' then
+			command = { 'sh', '-c', code }
+		elseif lang == 'bash' then
+			command = { 'bash', '-c', code }
+		elseif lang == 'py' or lang == 'python' then
+			command = { 'python3', '-c', code }
+		elseif lang == 'lua' then
+			command = { 'lua', '-e', code }
+		elseif lang == 'js' or lang == 'javascript' then
+			command = { 'node', '-e', code }
 		else
 			return false
 		end
+		local output = vim.fn.system(command)
 
 		local code_block_pattern = string.gsub(code_block, "([^%w])", "%%%1")
 		self.content = string.gsub(self.content, code_block_pattern .. '%s*```output[^`]*```', code_block)
