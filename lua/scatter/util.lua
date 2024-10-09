@@ -22,16 +22,7 @@ M.table_sort_without_duplicates = function(values)
 end
 
 M.is_scatter_file = function(path)
-	if string.find(path, config.path) then
-		return true
-	end
-	for _, runtimepath in ipairs(vim.api.nvim_get_runtime_file(path, true)) do
-		print('runtime', runtimepath)
-		if string.find(runtimepath, config.path) then
-			return true
-		end
-	end
-	return false
+	return string.find(path, config.path)
 end
 
 return M

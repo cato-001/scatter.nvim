@@ -4,7 +4,7 @@ local edit = require('scatter.edit')
 local generate_name = require('scatter.notes.name').generate
 
 local TAG_PATTERN = '#[%a%däÄöÖüÜß][%a%däÄöÖüÜß%_%-]+[%a%däÄöÖüÜß]'
-local ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]'
+local ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9%-%_]+[a-zA-Z0-9]'
 local PERSON_PATTERN = '@[a-zA-Z][a-zA-Z-_]+[a-zA-Z]'
 
 local Note = {}
@@ -164,6 +164,35 @@ function Note:split()
 		table.insert(notes, note)
 	end
 	return true, notes
+end
+
+function Note:run_code()
+	if not self:has_action('~run') then
+		return false
+	end
+
+	for code_block in string.gmatch(self.content, '%s*```[^%s]+%s*~run[^`]+```') do
+		local lang, code = string.match(code_block, '```([^%s]+)%s*~run%s+(.+)```')
+
+		local output = ''
+		if lang == 'bash' then
+			output = vim.fn.system({ 'bash', '-c', code })
+		elseif lang == 'python' then
+			output = vim.fn.system({ 'python3', '-c', code })
+		else
+			return false
+		end
+
+		local code_block_pattern = string.gsub(code_block, "([^%w])", "%%%1")
+		self.content = string.gsub(self.content, code_block_pattern .. '%s*```output[^`]*```', code_block)
+
+		local output_md = '```output\n' .. output .. '\n```'
+		self.content = string.gsub(self.content, code_block_pattern, code_block .. '\n\n' .. output_md)
+	end
+
+	self:save()
+
+	return true
 end
 
 return Note
