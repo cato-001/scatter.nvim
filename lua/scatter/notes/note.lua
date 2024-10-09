@@ -168,7 +168,7 @@ end
 
 function Note:run_code()
 	if not self:has_action('~run') then
-		return false
+		return
 	end
 
 	for code_block in string.gmatch(self.content, '%s*```[^%s]+%s*~run[^`]+```') do
@@ -186,7 +186,7 @@ function Note:run_code()
 		elseif lang == 'js' or lang == 'javascript' then
 			command = { 'node', '-e', code }
 		else
-			return false
+			return
 		end
 		local output = vim.fn.system(command)
 
@@ -198,8 +198,6 @@ function Note:run_code()
 	end
 
 	self:save()
-
-	return true
 end
 
 return Note
