@@ -3,7 +3,7 @@ local config = require('scatter.config')
 local edit = require('scatter.edit')
 local generate_name = require('scatter.notes.name').generate
 
-local TAG_PATTERN = '#[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]'
+local TAG_PATTERN = '#[%a%däÄöÖüÜß][%a%däÄöÖüÜß%_%-]+[%a%däÄöÖüÜß]'
 local ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]'
 local PERSON_PATTERN = '@[a-zA-Z][a-zA-Z-_]+[a-zA-Z]'
 
