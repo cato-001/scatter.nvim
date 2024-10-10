@@ -22,6 +22,10 @@ return function(opts)
 			clean.run_dprint()
 
 			local name = vim.fs.basename(path)
+			if name == nil then
+				return
+			end
+
 			local note = Note:load(name)
 			if note ~= nil then
 				note:run_code()

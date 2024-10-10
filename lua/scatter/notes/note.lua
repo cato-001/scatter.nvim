@@ -10,6 +10,10 @@ local PERSON_PATTERN = '@[a-zA-Z][a-zA-Z-_]+[a-zA-Z]'
 local Note = {}
 
 function Note:load(name, path)
+	if name == nil then
+		return nil
+	end
+
 	local note = {
 		name = name,
 		path = path or vim.fs.joinpath(config.notes_path, name),
