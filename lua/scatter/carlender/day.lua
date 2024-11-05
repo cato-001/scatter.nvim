@@ -9,6 +9,9 @@ function Day:new(date)
 	local path = vim.fs.joinpath(
 		config.carlender_path, 'year-' .. date_year, 'month-' .. date_month, 'day-' .. date_day .. '.md')
 
+	local dirname = vim.fs.dirname(path)
+	vim.loop.fs_mkdir(dirname, tonumber("644", 8))
+
 	local day = setmetatable({
 		date = date,
 		year = tonumber(date_year),

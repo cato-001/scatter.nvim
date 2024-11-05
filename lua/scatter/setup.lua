@@ -16,9 +16,10 @@ return function(opts)
 	vim.api.nvim_create_autocmd('BufWritePost', {
 		callback = function(event)
 			local path = vim.fn.fnamemodify(event['file'], ':p')
-			if not util.is_scatter_file(path) then
+			if util.is_scatter_file(path) then
 				return
 			end
+
 			clean.run_dprint()
 
 			local name = vim.fs.basename(path)
