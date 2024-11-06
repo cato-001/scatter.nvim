@@ -25,4 +25,14 @@ M.is_scatter_file = function(path)
 	return string.find(path, config.path)
 end
 
+M.concat_lines = function(values)
+	for index, line in ipairs(values) do
+		if type(line) == "table" then
+			line = table.concat(line, ' ')
+		end
+		values[index] = line
+	end
+	return table.concat(values, '\n')
+end
+
 return M

@@ -3,8 +3,6 @@ local previewers = require('telescope.previewers')
 local config = require('telescope.config').values
 local Synonyms = require('scatter.notes.synonyms')
 
-local NotesIterator = require('scatter.notes.iterator')
-
 local _callable_obj = function()
 	local obj = {}
 
@@ -28,12 +26,8 @@ function NotesFinder:new(filters)
 		synonyms = Synonyms:load(),
 	}, self)
 
-	local iter = NotesIterator:new()
-	while true do
-		local note = iter:next_note()
-		if not note then
-			break
-		end
+	local NotesIterator = require('scatter.notes.iterator')
+	for note in NotesIterator:new() do
 		if note:match_all(filters) then
 			table.insert(finder.notes, note)
 		end

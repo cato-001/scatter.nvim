@@ -13,6 +13,11 @@ local function setup_today(opts)
 			local day = Day:today()
 			day:_parse_appointments()
 		end, {})
+
+		vim.api.nvim_create_user_command('Test', function()
+			local today = Day:today()
+			today:_parse_appointments()
+		end, {})
 	end
 end
 

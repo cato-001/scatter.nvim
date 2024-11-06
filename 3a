@@ -1,0 +1,39 @@
+local tag = require('scatter.notes.tag')
+local Time = require('scatter.carlender.time')
+local util = require('scatter.util')
+
+local Appointment = {}
+
+function Appointment:from_times(line)
+	local hour, minute, raw_duration = string.match(line, '^(%d%d?):?(%d%d)?%s*([^%s].*[^%s])?%s*\n?$')
+	hour = tonumber(hour)
+	minute = tonumber(minute)
+	local start = Time:new(hour, minute)
+
+	local hours = string.match(raw_duration, '(%d+)h')
+	local minutes = string.match(raw_duration, '(%d+)h')
+	local duration = Time:parse(raw_duration):total_minutes() + Time:new(hours, minutes):total_minutes()
+
+	local appointment = setmetatable({
+		start = start,
+		duration = duration,
+		comments = {},
+		tags = {},
+	}, self)
+	self.__index = self
+
+	return appointment
+end
+
+function Appointment:add_comment(comment)
+	tag.parse_into(self.tags, comment)
+	table.insert(self.comments, tag.remove_all(comment))
+end
+
+function Appointment:to_string()
+	return util.concat_lines({
+		unpack(self.comments)
+	})
+end
+
+return Appointment

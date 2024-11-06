@@ -1,28 +1,24 @@
-local util = require('scatter.util')
 local config = require('scatter.config')
 local edit = require('scatter.edit')
+local tag = require('scatter.tag')
+local util = require('scatter.util')
 local generate_name = require('scatter.notes.name').generate
 
-local TAG_PATTERN = '#[%a%däÄöÖüÜß][%a%däÄöÖüÜß%_%-]+[%a%däÄöÖüÜß]'
-local ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9%-%_]+[a-zA-Z0-9]'
-local PERSON_PATTERN = '@[a-zA-Z][a-zA-Z-_]+[a-zA-Z]'
-
 local Note = {}
+Note.__index = Note
 
 function Note:load(name, path)
 	if name == nil then
 		return nil
 	end
 
-	local note = {
+	local note = setmetatable({
 		name = name,
 		path = path or vim.fs.joinpath(config.notes_path, name),
-		tags = {},
-		actions = {},
-	}
+		bundle = tag.Bundle:empty()
+	}, self)
 
-	setmetatable(note, self)
-	self.__index = self
+	if util.
 
 	local file = io.open(note.path)
 	if not file then
@@ -31,28 +27,20 @@ function Note:load(name, path)
 	note.content = file:read('*a')
 	file:close()
 
-	note:_update_tags()
-	note:_update_actions()
+	note:_update()
 
 	return note
 end
 
 function Note:from_content(content, date)
 	local name, path = generate_name(date)
-	local note = {
+	local note = setmetatable({
 		name = name,
 		path = path,
-		tags = {},
-		actions = {},
+		bundle = tag.Bundle:empty(),
 		content = content,
-	}
-
-	setmetatable(note, self)
-	self.__index = self
-
-	note:_update_tags()
-	note:_update_actions()
-
+	}, self)
+	note:_update()
 	return note
 end
 
@@ -74,21 +62,8 @@ function Note:edit()
 	edit.edit_file(self.path)
 end
 
-function Note:_update_tags()
-	util.table_clear(self.tags)
-	for tag in string.gmatch(self.content, TAG_PATTERN) do
-		tag = string.lower(tag)
-		table.insert(self.tags, tag)
-	end
-	util.table_sort_without_duplicates(self.tags)
-end
-
-function Note:_update_actions()
-	util.table_clear(self.actions)
-	for action in string.gmatch(self.content, ACTION_PATTERN) do
-		table.insert(self.actions, action)
-	end
-	util.table_sort_without_duplicates(self.actions)
+function Note:_update()
+	self.bundle:update_content(self.content)
 end
 
 function Note:get_date()
@@ -116,7 +91,7 @@ function Note:match_any(needles)
 end
 
 function Note:match(needle)
-	for _, tag in ipairs(self.tags) do
+	for _, tag in ipairs(self.bundle.tags) do
 		if string.find(tag, needle, nil, true) then
 			return true
 		end
@@ -125,27 +100,21 @@ function Note:match(needle)
 end
 
 function Note:replace_tag(prev, new)
-	self.content = string.gsub(self.content, TAG_PATTERN, function(tag)
-		if tag == prev then
-			return new
-		else
-			return tag
-		end
-	end)
-	self:_update_tags()
+	self.content = tag.replace(self.content, prev, new)
+	self:_update()
 end
 
 function Note:join_tags(sep)
-	return table.concat(self.tags, sep)
+	return table.concat(self.bundle.tags, sep)
 end
 
 function Note:has_tag(tag)
-	return vim.list_contains(self.tags, tag)
+	return vim.list_contains(self.bundle.tags, tag)
 end
 
 function Note:find_tags(pattern)
 	local tags = {}
-	for _, tag in ipairs(self.tags) do
+	for _, tag in ipairs(self.bundle.tags) do
 		if string.match(tag, pattern) then
 			table.insert(tags, tag)
 		end
@@ -154,7 +123,7 @@ function Note:find_tags(pattern)
 end
 
 function Note:has_action(action)
-	return vim.list_contains(self.actions, action)
+	return vim.list_contains(self.bundle.actions, action)
 end
 
 function Note:split()

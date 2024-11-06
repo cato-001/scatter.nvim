@@ -1,8 +1,10 @@
 local edit = require('scatter.edit')
 local config = require('scatter.config')
 local util = require('scatter.util')
+local Appointment = require('scatter.carlender.appointment')
 
 local Day = {}
+Day.__index = Day
 
 function Day:new(date)
 	local date_year, date_month, date_day = date:match('(%d+)%-(%d+)%-(%d+)')
@@ -12,7 +14,7 @@ function Day:new(date)
 	local dirname = vim.fs.dirname(path)
 	vim.loop.fs_mkdir(dirname, tonumber("644", 8))
 
-	local day = setmetatable({
+	return setmetatable({
 		date = date,
 		year = tonumber(date_year),
 		month = tonumber(date_month),
@@ -21,17 +23,14 @@ function Day:new(date)
 		content = "",
 		appointments = {},
 	}, self)
-	self.__index = self
-
-	return day
 end
 
 function Day:load(date)
 	local day = Day:new(date)
 
-	local file = io.open(self.path, 'r')
+	local file = io.open(day.path, 'r')
 	if file == nil then
-		error('could not open carlender: ' .. self.path)
+		error('could not open carlender: ' .. day.path)
 	end
 	day.content = file:read('*a')
 	file:close()
@@ -41,7 +40,7 @@ end
 
 function Day:today()
 	local date = os.date('%Y-%m-%d')
-	return Day:new(date)
+	return Day:load(date)
 end
 
 function Day:save()
@@ -59,6 +58,26 @@ end
 
 function Day:_parse_appointments()
 	util.table_clear(self.appointments)
+
+	local appointment = nil
+	for line in vim.gsplit(self.content, '\n', { plain = true }) do
+		line = string.gsub(line, '^%s+', '')
+		line = string.gsub(line, '%s+$', '')
+		if line == '' then
+			if appointment ~= nil then
+				table.insert(self.appointments, appointment)
+				appointment = nil
+			end
+		elseif appointment == nil then
+			appointment = Appointment:from_times(line)
+		else
+			appointment:add_comment(line)
+		end
+	end
+
+	for _, item in ipairs(self.appointments) do
+		print(item:to_string_pretty())
+	end
 end
 
 function Day:_reorder_appointments()
