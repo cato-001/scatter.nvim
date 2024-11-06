@@ -61,4 +61,10 @@ function Day:_parse_appointments()
 	util.table_clear(self.appointments)
 end
 
+function Day:_reorder_appointments()
+	table.sort(self.appointments, function(start, other)
+		return start < other
+	end)
+end
+
 return Day
