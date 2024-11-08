@@ -1,7 +1,8 @@
-local notes_setup = require('scatter.notes.setup')
+local notes_setup = require('scatter.note.setup')
 local carlender_setup = require('scatter.carlender.setup')
-local Note = require('scatter.notes.note')
-local clean = require('scatter.notes.clean')
+local Note = require('scatter.note')
+local Carlender = require('scatter.carlender')
+local clean = require('scatter.note.clean')
 local edit = require('scatter.edit')
 local util = require('scatter.util')
 
@@ -16,11 +17,13 @@ return function(opts)
 	vim.api.nvim_create_autocmd('BufWritePost', {
 		callback = function(event)
 			local path = vim.fn.fnamemodify(event['file'], ':p')
-			if not util.is_scatter_file(path) then
+
+			local carlender = Carlender:load(path)
+			if carlender ~= nil then
+				print('you are in a carlender')
+				carlender:_parse_appointments()
 				return
 			end
-
-			clean.run_dprint()
 
 			local name = vim.fs.basename(path)
 			if name == nil then
@@ -28,9 +31,12 @@ return function(opts)
 			end
 
 			local note = Note:load(name)
-			if note ~= nil then
-				note:run_code()
+			if note == nil then
+				return
 			end
+
+			clean.run_dprint()
+			note:run_code()
 
 			edit.reload_file()
 		end

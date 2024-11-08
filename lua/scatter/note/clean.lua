@@ -1,5 +1,5 @@
 local config = require('scatter.config')
-local Synonyms = require('scatter.notes.synonyms')
+local Synonyms = require('scatter.note.synonyms')
 local load_all_tags = require('scatter.tag').load_all_tags
 
 local M = {}
@@ -21,8 +21,8 @@ M.update_synonyms = function()
 end
 
 M.unify_timestamps = function()
-	local NotesIterator = require('scatter.notes.iterator')
-	for note in NotesIterator:new() do
+	local NoteIterator = require('scatter.note.iterator')
+	for note in NoteIterator:new() do
 		local tags = note:find_tags('^#202%d$')
 		for _, tag in ipairs(tags) do
 			local new = string.gsub(tag, '(%d+)', 'year-%1')
@@ -40,8 +40,8 @@ M.unify_timestamps = function()
 end
 
 M.split_notes = function()
-	local NotesIterator = require('scatter.notes.iterator')
-	for note in NotesIterator:new() do
+	local NoteIterator = require('scatter.note.iterator')
+	for note in NoteIterator:new() do
 		local success, split_notes = note:split()
 		if success then
 			for _, split_note in ipairs(split_notes) do

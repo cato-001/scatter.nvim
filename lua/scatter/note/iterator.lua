@@ -1,8 +1,8 @@
 local config = require('scatter.config')
 
-local NotesIterator = {}
+local NoteIterator = {}
 
-function NotesIterator:new()
+function NoteIterator:new()
 	local obj = {}
 	setmetatable(obj, self)
 	self.__index = self
@@ -15,7 +15,8 @@ function NotesIterator:new()
 	return obj
 end
 
-function NotesIterator:__call()
+function NoteIterator:__call()
+	local Note = require('scatter.note')
 	local name, type = nil, nil
 	while true do
 		name, type = vim.loop.fs_scandir_next(self.handle)
@@ -23,16 +24,18 @@ function NotesIterator:__call()
 			return nil
 		end
 		if type == 'file' and string.find(name, "%.md$") then
-			break
+			local note = Note:load(name)
+			if note ~= nil then
+				return note
+			end
 		end
 	end
-	return require('scatter.notes.note'):load(name)
 end
 
-function NotesIterator:collect_notes(notes)
+function NoteIterator:collect_notes(notes)
 	for note in self do
 		table.insert(notes, note)
 	end
 end
 
-return NotesIterator
+return NoteIterator

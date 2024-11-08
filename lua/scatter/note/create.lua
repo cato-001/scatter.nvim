@@ -1,4 +1,4 @@
-local Note = require('scatter.notes.note')
+local Note = require('scatter.note')
 
 local function get_tags(opts)
 	if opts == nil then

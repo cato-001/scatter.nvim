@@ -2,7 +2,7 @@ local config = require('scatter.config')
 local edit = require('scatter.edit')
 local tag = require('scatter.tag')
 local util = require('scatter.util')
-local generate_name = require('scatter.notes.name').generate
+local generate_name = require('scatter.note.name').generate
 
 local Note = {}
 Note.__index = Note
@@ -18,12 +18,15 @@ function Note:load(name, path)
 		bundle = tag.Bundle:empty()
 	}, self)
 
-	if util.
+	if not util.is_note_file(note.path) then
+		return nil
+	end
 
 	local file = io.open(note.path)
 	if not file then
 		return nil
 	end
+
 	note.content = file:read('*a')
 	file:close()
 

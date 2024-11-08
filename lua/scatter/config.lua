@@ -1,7 +1,7 @@
 local config = {}
 
-config.path = vim.fs.normalize('~/scatter')
-config.notes_path = vim.fs.normalize(config.path .. '/notes')
-config.carlender_path = vim.fs.normalize(config.path .. '/carlender')
+config.path = vim.fn.fnamemodify(vim.fs.normalize('~/scatter'), ':p')
+config.notes_path = vim.fn.fnamemodify(vim.fs.normalize(config.path .. '/notes'), ':p')
+config.carlender_path = vim.fn.fnamemodify(vim.fs.normalize(config.path .. '/carlender'), ':p')
 
 return config

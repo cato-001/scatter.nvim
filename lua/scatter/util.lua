@@ -22,7 +22,18 @@ M.table_sort_without_duplicates = function(values)
 end
 
 M.is_scatter_file = function(path)
-	return string.find(path, config.path)
+	path = vim.fn.fnamemodify(path, ':p')
+	return M.string_starts_with(path, config.path)
+end
+
+M.is_note_file = function(path)
+	path = vim.fn.fnamemodify(path, ':p')
+	return M.string_starts_with(path, config.notes_path)
+end
+
+M.is_carlender_file = function(path)
+	path = vim.fn.fnamemodify(path, ':p')
+	return M.string_starts_with(path, config.carlender_path)
 end
 
 M.concat_lines = function(values)
@@ -33,6 +44,13 @@ M.concat_lines = function(values)
 		values[index] = line
 	end
 	return table.concat(values, '\n')
+end
+
+M.string_starts_with = function(string, start)
+	if string == nil or start == nil then
+		return false
+	end
+	return string.sub(string, 1, #start) == start
 end
 
 return M

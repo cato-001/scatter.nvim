@@ -1,7 +1,7 @@
 local pickers = require('telescope.pickers')
 local previewers = require('telescope.previewers')
 local config = require('telescope.config').values
-local Synonyms = require('scatter.notes.synonyms')
+local Synonyms = require('scatter.note.synonyms')
 
 local _callable_obj = function()
 	local obj = {}
@@ -16,9 +16,9 @@ local _callable_obj = function()
 	return obj
 end
 
-local NotesFinder = _callable_obj()
+local NoteFinder = _callable_obj()
 
-function NotesFinder:new(filters)
+function NoteFinder:new(filters)
 	filters = filters or {}
 
 	local finder = setmetatable({
@@ -26,8 +26,8 @@ function NotesFinder:new(filters)
 		synonyms = Synonyms:load(),
 	}, self)
 
-	local NotesIterator = require('scatter.notes.iterator')
-	for note in NotesIterator:new() do
+	local NoteIterator = require('scatter.note.iterator')
+	for note in NoteIterator:new() do
 		if note:match_all(filters) then
 			table.insert(finder.notes, note)
 		end
@@ -36,7 +36,7 @@ function NotesFinder:new(filters)
 	return finder
 end
 
-function NotesFinder:_find(prompt, process_result, process_complete)
+function NoteFinder:_find(prompt, process_result, process_complete)
 	local needles = {}
 	for needle in prompt:gmatch('[^%s]+') do
 		table.insert(needles, needle)
@@ -62,7 +62,7 @@ end
 local function notes_search_picker(opts)
 	opts = opts or {}
 
-	local finder = NotesFinder:new(opts['filters'])
+	local finder = NoteFinder:new(opts['filters'])
 	local sorter = config.generic_sorter(opts)
 	local previewer = previewers.new_termopen_previewer({
 		get_command = function(entry)

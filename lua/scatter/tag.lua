@@ -73,9 +73,9 @@ local function is_timestamp(tag)
 end
 
 M.load_all_tags = function()
-	local NotesIterator = require('scatter.notes.iterator')
+	local NoteIterator = require('scatter.note.iterator')
 	local tags = {}
-	for note in NotesIterator:new() do
+	for note in NoteIterator:new() do
 		vim.list_extend(tags, note.bundle.tags)
 	end
 	for index = #tags, 1, -1 do
