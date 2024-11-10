@@ -35,6 +35,10 @@ function M.Bundle:_clear()
 end
 
 function M.Bundle:add_content(content)
+	if content == nil then
+		return
+	end
+
 	local function parse_pattern_into(buffer, pattern)
 		for item in string.gmatch(content, pattern) do
 			table.insert(buffer, item)

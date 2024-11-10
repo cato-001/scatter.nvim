@@ -54,7 +54,8 @@ end
 
 M.run_dprint = function()
 	if vim.fn.executable('dprint') == 0 then
-		error('dprint is not installed')
+		print('dprint is not installed')
+		return
 	end
 	vim.system({ 'dprint', 'fmt' }, {
 		cwd = config.path,

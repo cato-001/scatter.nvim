@@ -8,7 +8,7 @@ local Note = {}
 Note.__index = Note
 
 function Note:load(name, path)
-	if name == nil then
+	if name == nil or name == '' then
 		return nil
 	end
 
@@ -174,6 +174,52 @@ function Note:run_code()
 	end
 
 	self:save()
+end
+
+function Note:generate_pandoc()
+	if not self:has_action('~pandoc-md') then
+		return
+	end
+
+	if vim.fn.executable('pandoc') == 0 then
+		print('pandoc is not installed')
+		return
+	end
+
+	local path, pandoc = string.match(self.content, '~pandoc%-md%s*([^%s]+)%s+(.+)')
+	if path == nil or pandoc == nil then
+		return
+	end
+
+	path = vim.fs.joinpath(config.path, path)
+
+	local stdin = vim.loop.new_pipe(false)
+	local stdout = vim.loop.new_pipe(false)
+	local stderr = vim.loop.new_pipe(false)
+
+	vim.loop.read_start(stdout, function(_, data)
+		print(string.format("Output: %s", data))
+	end)
+	vim.loop.read_start(stderr, function(_, data)
+		print(string.format("Error: %s", data))
+	end)
+
+	local handle
+	handle = vim.loop.spawn('pandoc', {
+		args = { '--read', 'markdown', '--output', path },
+		stdio = { stdin, stdout, stderr },
+	}, function(code)
+		stdout:close()
+		stderr:close()
+		handle:close()
+
+		if code ~= 0 then
+			print('pandoc exited with code:', code)
+		end
+	end)
+
+	stdin:write(pandoc)
+	stdin:close()
 end
 
 return Note

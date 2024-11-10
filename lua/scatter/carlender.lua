@@ -46,8 +46,8 @@ function Carlender:from(opts)
 	}, self)
 end
 
-function Carlender:load(date)
-	local carlender = Carlender:new(date)
+function Carlender:load(opts)
+	local carlender = Carlender:from(opts)
 	if carlender == nil then
 		return nil
 	end
@@ -65,7 +65,7 @@ end
 
 function Carlender:today()
 	local date = os.date('%Y-%m-%d')
-	return Carlender:load(date)
+	return Carlender:load({ date = date })
 end
 
 function Carlender:save()
