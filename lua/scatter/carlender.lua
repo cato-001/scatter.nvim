@@ -26,9 +26,9 @@ function Carlender:from(opts)
 		if not util.is_carlender_file(opts.path) then
 			return nil
 		end
-		date_year = opts.date:match('year%-(%d+)')
-		date_month = opts.date:match('month%-(%d+)')
-		date_day = opts.date:match('day%-(%d+)')
+		date_year = opts.path:match('year%-(%d+)')
+		date_month = opts.path:match('month%-(%d+)')
+		date_day = opts.path:match('day%-(%d+)')
 		if date_year == nil or date_month == nil or date_day == nil then
 			return nil
 		end
