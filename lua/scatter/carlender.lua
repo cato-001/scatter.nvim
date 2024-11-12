@@ -100,15 +100,28 @@ function Carlender:_parse_appointments()
 		end
 	end
 
+	self:_reorder_appointments()
+	self:_calculate_missing_appointment_duration()
+
 	for _, item in ipairs(self.appointments) do
 		print(item:to_string_pretty())
 	end
 end
 
 function Carlender:_reorder_appointments()
-	table.sort(self.appointments, function(start, other)
-		return start < other
+	table.sort(self.appointments, function(appointment, other)
+		return appointment.start_time < other.start_time
 	end)
+end
+
+function Carlender:_calculate_missing_appointment_duration()
+	for index, appointment in ipairs(self.appointments) do
+		local next_appointment = self.appointments[index + 1]
+		local missing_duration = appointment.duration == nil or appointment.duration:is_empty()
+		if missing_duration and next_appointment ~= nil then
+			appointment.duration = next_appointment.start_time - appointment.start_time
+		end
+	end
 end
 
 return Carlender

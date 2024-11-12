@@ -33,12 +33,64 @@ function Time:__add(other)
 end
 
 function Time:__sub(other)
-	if other.__index == Time then
-		local minutes = self.minutes - other.minutes
-		local hours = self.hours - other.hours
-		Duration:new(hours, minutes)
+	if getmetatable(self) ~= getmetatable(other) then
+		return nil
 	end
-	return nil
+	local minutes = self.minutes - other.minutes
+	local hours = self.hours - other.hours
+	return Duration:new(hours, minutes)
+end
+
+function Time:__lt(other)
+	if getmetatable(self) ~= getmetatable(other) then
+		return false
+	end
+	if self.hours < other.hours then
+		return true
+	end
+	if self.hours == other.hours and self.minutes < other.minutes then
+		return true
+	end
+	return false
+end
+
+function Time:__le(other)
+	if getmetatable(self) ~= getmetatable(other) then
+		return false
+	end
+	if self.hours < other.hours then
+		return true
+	end
+	if self.hours == other.hours and self.minutes <= other.minutes then
+		return true
+	end
+	return false
+end
+
+function Time:__gt(other)
+	if getmetatable(self) ~= getmetatable(other) then
+		return false
+	end
+	if self.hours > other.hours then
+		return true
+	end
+	if self.hours == other.hours and self.minutes > other.minutes then
+		return true
+	end
+	return false
+end
+
+function Time:__ge(other)
+	if getmetatable(self) ~= getmetatable(other) then
+		return false
+	end
+	if self.hours > other.hours then
+		return true
+	end
+	if self.hours == other.hours and self.minutes >= other.minutes then
+		return true
+	end
+	return false
 end
 
 function Time:_fix_overflow()

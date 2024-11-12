@@ -33,4 +33,8 @@ function Duration:to_string_pretty()
 	return table.concat(parts, ' ')
 end
 
+function Duration:is_empty()
+	return self.hours == nil and self.minutes == nil
+end
+
 return Duration
