@@ -60,6 +60,10 @@ function M.Bundle:to_string()
 		local persons = table.concat(self.persons, ' ')
 		table.insert(lines, persons)
 	end
+	if #self.actions ~= 0 then
+		local actions = table.concat(self.actions, ' ')
+		table.insert(lines, actions)
+	end
 	return table.concat(lines, '\n')
 end
 

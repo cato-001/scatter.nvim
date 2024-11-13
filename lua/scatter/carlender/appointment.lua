@@ -43,13 +43,21 @@ function Appointment:add_comment(comment)
 end
 
 function Appointment:to_string_functional()
-
+	local header = self.start_time:to_string_functional()
+	if self.duration ~= nil then
+		header = header .. ' ' .. self.duration:to_string()
+	end
+	local tags = self.bundle:to_string()
+	if tags ~= '' then
+		header = header .. '\n' .. tags
+	end
+	return table.concat({ header, unpack(self.comments) }, '\n')
 end
 
 function Appointment:to_string_pretty()
 	local header = self.start_time:to_string_pretty()
 	if self.duration ~= nil then
-		header = header .. ' ' .. self.duration:to_string_pretty()
+		header = header .. ' ' .. self.duration:to_string()
 	end
 	local tags = self.bundle:to_string()
 	if tags ~= '' then

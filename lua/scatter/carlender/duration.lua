@@ -22,7 +22,7 @@ function Duration:parse(text)
 	return self:new(hours, minutes)
 end
 
-function Duration:to_string_pretty()
+function Duration:to_string()
 	local parts = {}
 	if self.hours ~= nil and self.hours ~= 0 then
 		table.insert(parts, string.format('%dh', self.hours))
