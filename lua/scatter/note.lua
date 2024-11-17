@@ -8,6 +8,7 @@ local Note = {}
 Note.__index = Note
 
 function Note:load(name, path)
+	name = vim.fs.basename(path)
 	if name == nil or name == '' then
 		return nil
 	end
@@ -111,8 +112,8 @@ function Note:join_tags(sep)
 	return table.concat(self.bundle.tags, sep)
 end
 
-function Note:has_tag(tag)
-	return vim.list_contains(self.bundle.tags, tag)
+function Note:has_tag(name)
+	return vim.list_contains(self.bundle.tags, name)
 end
 
 function Note:find_tags(pattern)

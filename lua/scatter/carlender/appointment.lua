@@ -42,6 +42,21 @@ function Appointment:add_comment(comment)
 	end
 end
 
+function Appointment:has_tag(name)
+	return vim.list_contains(self.bundle.tags, name)
+end
+
+function Appointment:has_action(name)
+	return vim.list_contains(self.bundle.actions, name)
+end
+
+function Appointment:add_action(name)
+	if self:has_action(name) then
+		return
+	end
+	table.insert(self.bundle.actions, name)
+end
+
 function Appointment:to_string_functional()
 	local header = self.start_time:to_string_functional()
 	if self.duration ~= nil then

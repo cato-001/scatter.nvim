@@ -10,13 +10,6 @@ local function setup_today(opts)
 				today:edit()
 			end
 		end, {})
-
-		vim.api.nvim_create_user_command('Test', function()
-			local today = Carlender:today()
-			if today ~= nil then
-				today:_parse_appointments()
-			end
-		end, {})
 	end
 end
 

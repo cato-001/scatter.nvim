@@ -53,4 +53,18 @@ M.string_starts_with = function(string, start)
 	return string.sub(string, 1, #start) == start
 end
 
+M.get_type = function(obj)
+	local Note = require('scatter.note')
+	local Carlender = require('scatter.carlender')
+
+	local type = type(obj)
+	local meta = getmetatable(obj)
+	if meta == Note then
+		return 'note'
+	elseif meta == Carlender then
+		return 'carlender'
+	end
+	return type
+end
+
 return M
