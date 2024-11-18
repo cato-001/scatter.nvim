@@ -52,14 +52,4 @@ M.split_notes = function()
 	end
 end
 
-M.run_dprint = function()
-	if vim.fn.executable('dprint') == 0 then
-		print('dprint is not installed')
-		return
-	end
-	vim.system({ 'dprint', 'fmt' }, {
-		cwd = config.path,
-	})
-end
-
 return M

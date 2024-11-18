@@ -46,7 +46,7 @@ function Carlender:from(opts)
 	}, self)
 end
 
-function Carlender:load(opts)
+function Carlender:from_file(opts)
 	local carlender = Carlender:from(opts)
 	if carlender == nil then
 		return nil
@@ -54,18 +54,34 @@ function Carlender:load(opts)
 
 	local file = io.open(carlender.path, 'r')
 	if file ~= nil then
-		carlender.content = file:read('*a')
+		local content = file:read('*a')
 		file:close()
-	else
-		carlender.content = ''
+		carlender:_parse_appointments_from_text(content)
 	end
+
+	return carlender
+end
+
+function Carlender:from_buffer(buffer)
+	local path = vim.api.nvim_buf_get_name(buffer)
+	if path == nil then
+		return nil
+	end
+
+	local carlender = Carlender:from({ path = path })
+	if carlender == nil then
+		return nil
+	end
+
+	local content = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+	carlender:_parse_appointments_from_lines(content)
 
 	return carlender
 end
 
 function Carlender:today()
 	local date = os.date('%Y-%m-%d')
-	return Carlender:load({ date = date })
+	return Carlender:from_file({ date = date })
 end
 
 function Carlender:save()
@@ -81,11 +97,21 @@ function Carlender:file_exists()
 	return stat ~= nil
 end
 
-function Carlender:_parse_appointments()
+function Carlender:_parse_appointments_from_text(text)
+	local lines = {}
+
+	for line in vim.gsplit(self.content, '\n', { plain = true }) do
+		table.insert(lines, line)
+	end
+
+	self:_parse_appointments_from_lines(lines)
+end
+
+function Carlender:_parse_appointments_from_lines(lines)
 	util.table_clear(self.appointments)
 
 	local appointment = nil
-	for line in vim.gsplit(self.content, '\n', { plain = true }) do
+	for _, line in ipairs(lines) do
 		line = string.gsub(line, '^%s+', '')
 		line = string.gsub(line, '%s+$', '')
 		if line == '' then
