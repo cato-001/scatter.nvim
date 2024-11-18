@@ -54,7 +54,7 @@ M.attach_commands = function(buffer, type)
 		if plugin.should_run(type) then
 			local commands = plugin.commands
 			for name, callback in pairs(commands) do
-				vim.api.nvim_buf_create_user_command(buffer, name, function(event)
+				vim.api.nvim_buf_create_user_command(buffer, name, function()
 					local carlender = Carlender:from_buffer(buffer)
 					if carlender == nil then
 						return
