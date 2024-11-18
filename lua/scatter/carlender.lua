@@ -102,10 +102,6 @@ function Carlender:_parse_appointments()
 
 	self:_reorder_appointments()
 	self:_calculate_missing_appointment_duration()
-
-	for _, item in ipairs(self.appointments) do
-		print(item:to_string_pretty())
-	end
 end
 
 function Carlender:_reorder_appointments()
