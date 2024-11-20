@@ -1,10 +1,17 @@
 local tag = require('scatter.tag')
-local Time = require('scatter.carlender.time')
-local Duration = require('scatter.carlender.duration')
 
+--- @class Appointment
+--- @field start_time Time
+--- @field duration Duration
+--- @field comments string[]
+--- @field bundle Bundle
 local Appointment = {}
+Appointment.__index = Appointment
 
 function Appointment:from_times(line)
+	local Time = require('scatter.calender.time')
+	local Duration = require('scatter.calender.duration')
+
 	local hour, minute, finish = string.match(line, '^(%d%d?)$')
 	if hour == nil then
 		hour, minute, finish = string.match(line, '^(%d%d?):?(%d%d)%s*(.*)$')
@@ -21,17 +28,15 @@ function Appointment:from_times(line)
 		end
 	end
 
-	local appointment = setmetatable({
+	return setmetatable({
 		start_time = start_time,
 		duration = duration,
 		comments = {},
 		bundle = tag.Bundle:empty()
 	}, self)
-	self.__index = self
-
-	return appointment
 end
 
+--- @param comment string
 function Appointment:add_comment(comment)
 	self.bundle:add_content(comment)
 	comment = tag.remove_all(comment)

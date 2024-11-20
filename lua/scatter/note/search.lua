@@ -1,42 +1,33 @@
 local pickers = require('telescope.pickers')
 local previewers = require('telescope.previewers')
 local config = require('telescope.config').values
-local Synonyms = require('scatter.note.synonyms')
 
-local _callable_obj = function()
-	local obj = {}
+--- @class NoteFinder
+--- @field notes Note[]
+--- @field synonyms Synonyms
+local NoteFinder = {}
+NoteFinder.__index = NoteFinder
 
-	obj.__index = obj
-	obj.__call = function(t, ...)
-		return t:_find(...)
-	end
-
-	obj.close = function() end
-
-	return obj
-end
-
-local NoteFinder = _callable_obj()
-
+--- @param filters string[]?
+--- @return NoteFinder
 function NoteFinder:new(filters)
-	filters = filters or {}
+	local note_iter = require('scatter.note.iter')
+	local Synonyms = require('scatter.note.synonyms')
 
-	local finder = setmetatable({
-		notes = {},
-		synonyms = Synonyms:load(),
-	}, self)
-
-	local NoteIterator = require('scatter.note.iterator')
-	for note in NoteIterator:new() do
+	local notes = {}
+	for note in note_iter() do
 		if note:match_all(filters) then
-			table.insert(finder.notes, note)
+			table.insert(notes, note)
 		end
 	end
 
-	return finder
+	return setmetatable({
+		notes = notes,
+		synonyms = Synonyms:load(),
+	}, self)
 end
 
-function NoteFinder:_find(prompt, process_result, process_complete)
+function NoteFinder:__call(prompt, process_result, process_complete)
 	local needles = {}
 	for needle in prompt:gmatch('[^%s]+') do
 		table.insert(needles, needle)
@@ -46,12 +37,13 @@ function NoteFinder:_find(prompt, process_result, process_complete)
 
 	for _, note in ipairs(self.notes) do
 		if note:match_all(needles) then
-			local tags = note:join_tags(' ')
+			local bundle = note.source:get_bundle()
+			local tags = table.concat(bundle.tags, ' ')
 			process_result({
-				value = note.name,
+				value = note.source:get_name(),
 				display = tags,
 				ordinal = tags,
-				path = note.path
+				path = note.source:get_path(),
 			})
 		end
 	end
@@ -59,10 +51,13 @@ function NoteFinder:_find(prompt, process_result, process_complete)
 	process_complete()
 end
 
-local function notes_search_picker(opts)
+function NoteFinder:close() end
+
+--- @param opts { filters?: string[], }?
+return function(opts)
 	opts = opts or {}
 
-	local finder = NoteFinder:new(opts['filters'])
+	local finder = NoteFinder:new(opts.filters)
 	local sorter = config.generic_sorter(opts)
 	local previewer = previewers.new_termopen_previewer({
 		get_command = function(entry)
@@ -77,7 +72,3 @@ local function notes_search_picker(opts)
 		previewer = previewer
 	}):find()
 end
-
-return {
-	search_note = notes_search_picker
-}

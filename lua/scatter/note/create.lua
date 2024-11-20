@@ -1,5 +1,7 @@
 local Note = require('scatter.note')
 
+--- @param opts table
+--- @return string
 local function get_tags(opts)
 	if opts == nil then
 		return ''
@@ -18,8 +20,12 @@ local function get_tags(opts)
 	return table.concat(tags, ' ')
 end
 
+--- @param opts table
+--- @return Note
 return function(opts)
 	local content = get_tags(opts)
-	local note = Note:from_content(content)
-	note:edit()
+	local note = Note:new()
+	note.source:open()
+	note.source:modify(function() return { content } end)
+	return note
 end

@@ -1,58 +1,42 @@
-local notes_setup = require('scatter.note.setup')
-local carlender_setup = require('scatter.carlender.setup')
-local Note = require('scatter.note')
-local Carlender = require('scatter.carlender')
-local clean = require('scatter.note.clean')
-local util = require('scatter.util')
-
-local function get_scatter_obj(path)
-	local carlender = Carlender:from_file({ path = path })
-	if carlender ~= nil then
-		return carlender
-	end
-	return Note:load(path)
-end
-
 local function on_save(event)
-	local plugins = require('scatter.plugins')
-
-	local path = vim.fn.fnamemodify(event['file'], ':p')
+	local path = event.file
 	if path == nil then
 		return
 	end
 
-	local obj = get_scatter_obj(path)
-	if obj == nil then
-		return
-	end
-	plugins.on_save(obj)
+	local modules = require('scatter.modules')
+
+	local Source = require('scatter.source')
+	local source = Source:from_file(path)
+
+	local Note = require('scatter.note')
+	local note = Note:from(source)
+	modules.on_save(note, 'note')
+
+	local Calender = require('scatter.calender')
+	local calender = Calender:from(source)
+	modules.on_save(calender, 'calender')
 end
 
 local function on_attatch(event)
-	local plugins = require('scatter.plugins')
+	local Source = require('scatter.source')
+	local modules = require('scatter.modules')
 
-	local path = vim.fn.fnamemodify(event['file'], ':p')
-	if path == nil then
-		return
-	end
-
-	local obj = get_scatter_obj(path)
-	if obj == nil then
-		return
-	end
-
-	local buffer = event.buf
-	local type = util.get_type(obj)
-	plugins.attach_commands(buffer, type)
+	local source = Source:from_buffer(event.buf)
+	modules.attach_commands(source)
 end
 
 return function(opts)
+	local notes_setup = require('scatter.note.setup')
 	notes_setup(opts['notes'])
-	carlender_setup(opts['carlender'])
 
-	local plugins = require('scatter.plugins')
-	plugins.setup(opts['plugins'])
+	local calender_setup = require('scatter.calender.setup')
+	calender_setup(opts['calender'])
 
+	local modules = require('scatter.modules')
+	modules.setup(opts['modules'])
+
+	local clean = require('scatter.note.clean')
 	clean.update_synonyms()
 	clean.unify_timestamps()
 	clean.split_notes()

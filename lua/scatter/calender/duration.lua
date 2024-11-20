@@ -1,6 +1,12 @@
+--- @class Duration
+--- @field hours integer
+--- @field minutes integer
 local Duration = {}
 Duration.__index = Duration
 
+--- @param hours number?
+--- @param minutes number?
+--- @return Duration
 function Duration:new(hours, minutes)
 	hours = hours or 0
 	minutes = minutes or 0
@@ -10,6 +16,8 @@ function Duration:new(hours, minutes)
 	}, self)
 end
 
+--- @param text string
+--- @return Duration?
 function Duration:parse(text)
 	if text == nil then
 		return nil
@@ -22,6 +30,7 @@ function Duration:parse(text)
 	return self:new(hours, minutes)
 end
 
+--- @return string
 function Duration:to_string()
 	local parts = {}
 	if self.hours ~= nil and self.hours ~= 0 then
@@ -33,6 +42,7 @@ function Duration:to_string()
 	return table.concat(parts, ' ')
 end
 
+--- @return boolean
 function Duration:is_empty()
 	return self.hours == nil and self.minutes == nil
 end

@@ -2,7 +2,7 @@ local function setup_today(opts)
 	opts = opts or {}
 
 	if opts.command ~= nil then
-		local Carlender = require('scatter.carlender')
+		local Carlender = require('scatter.calender')
 
 		vim.api.nvim_create_user_command(opts.command, function()
 			local today = Carlender:today()

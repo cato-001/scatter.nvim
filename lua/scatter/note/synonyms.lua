@@ -1,8 +1,10 @@
 local util = require('scatter.util')
 local config = require('scatter.config')
 
+--- @class Synonyms
 local Synonyms = {}
 
+--- @return Synonyms
 function Synonyms:load()
 	local synonyms = setmetatable({
 		path = vim.fs.joinpath(config.path, 'synonyms.txt'),
