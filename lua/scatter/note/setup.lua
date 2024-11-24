@@ -23,7 +23,7 @@ local function setup_keymaps(opts)
 	local search = opts['search']
 	if search ~= nil then
 		local keys = table.remove(search, 1)
-		local search_note = require('scatter.note.search').search_note
+		local search_note = require('scatter.note.search')
 		vim.keymap.set('n', keys, search_note, search)
 	end
 	local commit = opts['commit']

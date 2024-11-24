@@ -1,72 +1,9 @@
 local util = require('scatter.util')
 
-local M = {
-	TAG_PATTERN = '#[%a%däÄöÖüÜß][%a%däÄöÖüÜß%_%-]+[%a%däÄöÖüÜß]',
-	ACTION_PATTERN = '~[a-zA-Z0-9][a-zA-Z0-9%-%_]+[a-zA-Z0-9]',
-	PERSON_PATTERN = '@[a-zA-ZäÄöÖüÜß][a-zA-Z-äÄöÖüÜß_%-]+[a-zA-ZäÄöÖüÜß]',
-}
+local M = {}
 
-M.Bundle = {}
-M.Bundle.__index = M.Bundle
-
-function M.Bundle:empty()
-	return setmetatable({
-		tags = {},
-		actions = {},
-		persons = {}
-	}, self)
-end
-
-function M.Bundle:from_content(content)
-	local bundle = self:empty()
-	bundle:add_content(content)
-	return bundle
-end
-
-function M.Bundle:update_content(content)
-	self:_clear()
-	self:add_content(content)
-end
-
-function M.Bundle:_clear()
-	util.table_clear(self.tags)
-	util.table_clear(self.actions)
-	util.table_clear(self.persons)
-end
-
-function M.Bundle:add_content(content)
-	if content == nil then
-		return
-	end
-
-	local function parse_pattern_into(buffer, pattern)
-		for item in string.gmatch(content, pattern) do
-			table.insert(buffer, item)
-		end
-	end
-
-	parse_pattern_into(self.tags, M.TAG_PATTERN)
-	parse_pattern_into(self.actions, M.ACTION_PATTERN)
-	parse_pattern_into(self.persons, M.PERSON_PATTERN)
-end
-
-function M.Bundle:to_string()
-	local lines = {}
-	if #self.tags ~= 0 then
-		local tags = table.concat(self.tags, ' ')
-		table.insert(lines, tags)
-	end
-	if #self.persons ~= 0 then
-		local persons = table.concat(self.persons, ' ')
-		table.insert(lines, persons)
-	end
-	if #self.actions ~= 0 then
-		local actions = table.concat(self.actions, ' ')
-		table.insert(lines, actions)
-	end
-	return table.concat(lines, '\n')
-end
-
+--- @param tag string
+--- @return boolean
 local function is_timestamp(tag)
 	if string.find(tag, '^#date%-%d+%-%d+%-%d+$') then
 		return true
@@ -81,10 +18,11 @@ local function is_timestamp(tag)
 end
 
 M.load_all_tags = function()
-	local NoteIterator = require('scatter.note.iterator')
+	local note_iter = require('scatter.note.iter')
 	local tags = {}
-	for note in NoteIterator:new() do
-		vim.list_extend(tags, note.bundle.tags)
+	for note in note_iter() do
+		local bundle = note.source:get_bundle()
+		vim.list_extend(tags, bundle:get_all())
 	end
 	for index = #tags, 1, -1 do
 		if is_timestamp(tags[index]) then
@@ -96,31 +34,35 @@ M.load_all_tags = function()
 	return tags
 end
 
-M.replace = function(text, prev, new)
+--- @param text string
+--- @param mapping table<string, string>
+--- @return string
+M.replace = function(text, mapping)
 	return string.gsub(text, M.TAG_PATTERN, function(tag)
-		if tag == prev then
-			return new
-		else
-			return tag
-		end
+		return mapping[tag] or tag
 	end)
 end
 
+--- @param text string
+--- @return string
 M.remove_all = function(text)
+	local pattern = require('scatter.tag.pattern')
+
 	local function remove_tag_char(tag)
 		return string.lower(string.sub(tag, 2))
 	end
+
 	local content = text
-	content = string.gsub(content, M.TAG_PATTERN, '')
-	content = string.gsub(content, M.ACTION_PATTERN, '')
-	content = string.gsub(content, M.PERSON_PATTERN, '')
+	content = string.gsub(content, pattern.NORMAL, '')
+	content = string.gsub(content, pattern.PERSON, '')
+	content = string.gsub(content, pattern.ACTION, '')
 	if string.match(content, '^%s*$') then
 		return ''
 	end
 
-	text = string.gsub(text, M.TAG_PATTERN, remove_tag_char)
-	text = string.gsub(text, M.ACTION_PATTERN, remove_tag_char)
-	return string.gsub(text, M.PERSON_PATTERN, remove_tag_char)
+	text = string.gsub(text, pattern.NORMAL, remove_tag_char)
+	text = string.gsub(text, pattern.PERSON, remove_tag_char)
+	return string.gsub(text, pattern.ACTION, remove_tag_char)
 end
 
 return M

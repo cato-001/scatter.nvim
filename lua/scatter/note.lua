@@ -1,89 +1,71 @@
 local config = require('scatter.config')
-local edit = require('scatter.edit')
-local tag = require('scatter.tag')
-local util = require('scatter.util')
-local generate_name = require('scatter.note.name').generate
 
+--- @class Note
+--- @field source Source
+--- @field todos Todo
 local Note = {}
 Note.__index = Note
 
-function Note:load(name, path)
-	if name == nil or name == '' then
-		return nil
-	end
+--- @param date string?
+--- @return Note
+function Note:new(date)
+	local charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+	local note_date = date or os.date('%Y-%m-%d')
 
-	local note = setmetatable({
-		name = name,
-		path = path or vim.fs.joinpath(config.notes_path, name),
-		bundle = tag.Bundle:empty()
-	}, self)
-
-	if not util.is_note_file(note.path) then
-		return nil
-	end
-
-	local file = io.open(note.path)
-	if not file then
-		return nil
-	end
-
-	note.content = file:read('*a')
-	file:close()
-
-	note:_update()
-
-	return note
-end
-
-function Note:from_content(content, date)
-	local name, path = generate_name(date)
-	local note = setmetatable({
-		name = name,
-		path = path,
-		bundle = tag.Bundle:empty(),
-		content = content,
-	}, self)
-	note:_update()
-	return note
-end
-
-function Note:save()
-	local file = io.open(self.path, 'w')
-	if not file then
-		error('could not save note: ' .. self.path)
-	end
-	file:write(self.content)
-	file:close()
-end
-
-function Note:delete()
-	os.remove(self.path)
-end
-
-function Note:edit()
-	self:save()
-	edit.edit_file(self.path)
-end
-
-function Note:_update()
-	self.bundle:update_content(self.content)
-end
-
-function Note:get_date()
-	local date = string.match(self.name, '^%d+%-%d+%-%d+')
-	return date
-end
-
-function Note:match_all(needles)
-	local result = 0
-	for _, needle in ipairs(needles) do
-		if self:match(needle) then
-			result = result + 1
+	local filepath
+	while true do
+		local chars = {}
+		for _ = 1, 20, 1 do
+			local position = math.random(#charset)
+			table.insert(chars, string.sub(charset, position, position))
+		end
+		local randstr = table.concat(chars, '')
+		local filename = note_date .. '_' .. randstr .. '.md'
+		filepath = vim.fs.joinpath(config.notes_path, filename)
+		if vim.loop.fs_stat(filepath) == nil then
+			break
 		end
 	end
-	return result == #needles, result
+
+	local Source = require('scatter.source')
+	local source = Source:from_file(filepath)
+	source:create_if_missing()
+
+	return setmetatable({
+		source = source,
+		todos = {},
+	}, self)
 end
 
+--- @param source Source
+--- @return Note?
+function Note:from(source)
+	if not source:path_starts_with(config.notes_path) then
+		return nil
+	end
+
+	return setmetatable({
+		source = source,
+		todos = {}
+	}, self)
+end
+
+--- @param needles string[]?
+--- @return boolean
+function Note:match_all(needles)
+	if needles == nil then
+		return true
+	end
+	for _, needle in ipairs(needles) do
+		if not self:match(needle) then
+			return false
+		end
+	end
+	return true
+end
+
+--- @param needles string[]
+--- @return boolean
 function Note:match_any(needles)
 	for _, needle in ipairs(needles) do
 		if self:match(needle) then
@@ -93,8 +75,11 @@ function Note:match_any(needles)
 	return false
 end
 
+--- @param needle string
+--- @return boolean
 function Note:match(needle)
-	for _, tag in ipairs(self.bundle.tags) do
+	local bundle = self.source:get_bundle()
+	for _, tag in ipairs(bundle.tags) do
 		if string.find(tag, needle, nil, true) then
 			return true
 		end
@@ -102,22 +87,39 @@ function Note:match(needle)
 	return false
 end
 
-function Note:replace_tag(prev, new)
-	self.content = tag.replace(self.content, prev, new)
-	self:_update()
+--- @param mapping table<string, string>
+function Note:replace_tags(mapping)
+	if #mapping == 0 then
+		return
+	end
+	local tag = require('scatter.tag')
+	self.source:modify(function(lines)
+		for index, line in ipairs(lines) do
+			lines[index] = tag.replace(line, mapping)
+		end
+		return lines
+	end)
 end
 
-function Note:join_tags(sep)
-	return table.concat(self.bundle.tags, sep)
+--- @param name string
+--- @return boolean
+function Note:has_tag(name)
+	local bundle = self.source:get_bundle()
+	if bundle == nil then
+		return false
+	end
+	return vim.list_contains(bundle.tags, name)
 end
 
-function Note:has_tag(tag)
-	return vim.list_contains(self.bundle.tags, tag)
-end
-
+--- @param pattern string | number
+--- @return string[]
 function Note:find_tags(pattern)
+	local bundle = self.source:get_bundle()
+	if bundle == nil then
+		return {}
+	end
 	local tags = {}
-	for _, tag in ipairs(self.bundle.tags) do
+	for _, tag in ipairs(bundle) do
 		if string.match(tag, pattern) then
 			table.insert(tags, tag)
 		end
@@ -125,101 +127,42 @@ function Note:find_tags(pattern)
 	return tags
 end
 
+--- @param action string
+--- @return boolean
 function Note:has_action(action)
-	return vim.list_contains(self.bundle.actions, action)
+	local bundle = self.source:get_bundle()
+	if bundle == nil then
+		return false
+	end
+	return vim.list_contains(bundle.actions, action)
 end
 
-function Note:split()
-	if not self:has_action('~split') then
-		return false, { self }
-	end
-	local date = self:get_date()
-	local notes = {}
-	for content in vim.gsplit(self.content, '~split') do
-		local note = Note:from_content(content, date)
-		table.insert(notes, note)
-	end
-	return true, notes
-end
-
-function Note:run_code()
-	if not self:has_action('~run') then
+--- @return (fun(): CodeBlock?) | nil
+function Note:iter_code_rev()
+	local lines = self.source:get_lines()
+	if lines == nil then
 		return
 	end
 
-	for code_block in string.gmatch(self.content, '%s*```[^%s]+%s*~run[^`]+```') do
-		local lang, code = string.match(code_block, '```([^%s]+)%s*~run%s+(.+)```')
-
-		local command = nil
-		if lang == 'sh' then
-			command = { 'sh', '-c', code }
-		elseif lang == 'bash' then
-			command = { 'bash', '-c', code }
-		elseif lang == 'py' or lang == 'python' then
-			command = { 'python3', '-c', code }
-		elseif lang == 'lua' then
-			command = { 'lua', '-e', code }
-		elseif lang == 'js' or lang == 'javascript' then
-			command = { 'node', '-e', code }
-		else
-			return
+	local CodeBlock = require('scatter.note.code')
+	local index = #lines
+	return function()
+		local end_line = nil
+		while index > 0 do
+			local line = lines[index]
+			if string.find(line, '^```') then
+				if end_line == nil then
+					end_line = index
+				else
+					local start_line = index
+					index = index - 1
+					return CodeBlock:new(self, start_line, end_line)
+				end
+			end
+			index = index - 1
 		end
-		local output = vim.fn.system(command)
-
-		local code_block_pattern = string.gsub(code_block, "([^%w])", "%%%1")
-		self.content = string.gsub(self.content, code_block_pattern .. '%s*```output[^`]*```', code_block)
-
-		local output_md = '```output\n' .. output .. '\n```'
-		self.content = string.gsub(self.content, code_block_pattern, code_block .. '\n\n' .. output_md)
+		return nil
 	end
-
-	self:save()
-end
-
-function Note:generate_pandoc()
-	if not self:has_action('~pandoc-md') then
-		return
-	end
-
-	if vim.fn.executable('pandoc') == 0 then
-		print('pandoc is not installed')
-		return
-	end
-
-	local path, pandoc = string.match(self.content, '~pandoc%-md%s*([^%s]+)%s+(.+)')
-	if path == nil or pandoc == nil then
-		return
-	end
-
-	path = vim.fs.joinpath(config.path, path)
-
-	local stdin = vim.loop.new_pipe(false)
-	local stdout = vim.loop.new_pipe(false)
-	local stderr = vim.loop.new_pipe(false)
-
-	vim.loop.read_start(stdout, function(_, data)
-		print(string.format("Output: %s", data))
-	end)
-	vim.loop.read_start(stderr, function(_, data)
-		print(string.format("Error: %s", data))
-	end)
-
-	local handle
-	handle = vim.loop.spawn('pandoc', {
-		args = { '--read', 'markdown', '--output', path },
-		stdio = { stdin, stdout, stderr },
-	}, function(code)
-		stdout:close()
-		stderr:close()
-		handle:close()
-
-		if code ~= 0 then
-			print('pandoc exited with code:', code)
-		end
-	end)
-
-	stdin:write(pandoc)
-	stdin:close()
 end
 
 return Note
