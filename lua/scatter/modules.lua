@@ -17,21 +17,33 @@ M.setup = function(opts)
 		M.add(module)
 	end
 
+	--- @type table<string, string>
+	local NAMED_MODULES = {
+		jira = 'scatter.modules.jira',
+		dprint = 'scatter.modules.dprint',
+		scripting = 'scatter.modules.scripting',
+		split = 'scatter.modules.split',
+		pandoc = 'scatter.modules.pandoc',
+	}
+
 	for name, config in pairs(opts) do
-		if name == "jira" then
-			local JiraModule = require('scatter.modules.jira')
-			JiraModule.setup(config)
-			M.add(JiraModule)
+		local module_path = NAMED_MODULES[name]
+		if module_path == nil then
+			error('wrong notes module defined in config: ' .. name)
 		end
+		local module = require(module_path)
+		if type(module) ~= 'table' then
+			error('module should be a table: ' .. module_path .. ' ' .. vim.inspect(module))
+		end
+		local setup = module.setup
+		if setup ~= nil then
+			setup(config)
+		end
+		M.add(module)
 	end
 end
 
---- @alias ModuleOpts {
----     name: string,
----     types: string[] | nil,
----     should_run: (fun(type: string): boolean) | nil,
----     on_save: fun(object: any) | nil,
----     commands: table<string, fun(object: any)> | nil}
+--- @alias ModuleOpts { name: string, types: string[] | nil, should_run: (fun(type: string): boolean) | nil, on_save: fun(object: any) | nil, commands: table<string, fun(object: any)> | nil}
 
 --- @param opts ModuleOpts
 M.add = function(opts)
@@ -60,40 +72,58 @@ M.remove = function(name)
 	M._modules[name] = nil
 end
 
---- @param obj Note | Calender | nil
---- @param obj_type 'note' | 'calender'
-M.on_save = function(obj, obj_type)
-	if obj == nil then
+--- @param source Source?
+M.on_save = function(source)
+	if source == nil then
 		return
 	end
 
+	local Note = require('scatter.note')
+	local Calender = require('scatter.calender')
+
+	local note = Note:from(source)
+	local calender = Calender:from(source)
+
 	for _, plugin in pairs(M._modules) do
-		if plugin.should_run(obj_type) then
-			plugin.on_save(obj)
+		if note ~= nil and plugin.should_run('note') then
+			plugin.on_save(note)
+		end
+		if calender ~= nil and plugin.should_run('calender') then
+			plugin.on_save(calender)
 		end
 	end
 end
 
 --- @param source Source
 M.attach_commands = function(source)
-	if true then
+	local buffer = source.buffer
+	if buffer == nil then
 		return
 	end
-	local Carlender = require('scatter.calender')
+
+	local Note = require('scatter.note')
+	local Calender = require('scatter.calender')
+
+	local note = Note:from(source)
+	local calender = Calender:from(source)
+	if note == nil and calender == nil then
+		return
+	end
 
 	for _, module in pairs(M._modules) do
-		print(vim.inspect(module), type)
-		if module.should_run(type) then
-			local commands = module.commands
-			for name, callback in pairs(commands) do
-				vim.api.nvim_buf_create_user_command(buffer, name, function()
-					local carlender = Carlender:from_buffer(buffer)
-					if carlender == nil then
-						return
-					end
-					callback(carlender)
-				end, {})
+		for name, callback in pairs(module.commands) do
+			if note ~= nil and module.should_run('note') then
+				vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(note) end })
+				vim.api.nvim_buf_create_user_command(buffer, name, function() callback(note) end, {})
+			elseif calender ~= nil and module.should_run('calender') then
+				vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calender) end })
+				vim.api.nvim_buf_create_user_command(buffer, name, function() callback(calender) end, {})
 			end
+		end
+		if note ~= nil and module.should_run('note') then
+			vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(note) end })
+		elseif calender ~= nil and module.should_run('calender') then
+			vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calender) end })
 		end
 	end
 end

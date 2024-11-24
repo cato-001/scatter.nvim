@@ -5,14 +5,16 @@ local commit = function(appointment) end
 
 --- @param calender Calender
 local function run_stage(calender)
-	for _, appointment in ipairs(calender.appointments) do
-		appointment:add_action(JIRA_ACTION)
+	for appointment in calender:iter_appointments_rev() do
+		if appointment:has_tag('#work') then
+			appointment:add_action(JIRA_ACTION)
+		end
 	end
 end
 
 --- @param calender Calender
-local function run_commit()
-	for _, appointment in ipairs(carlender.appointments) do
+local function run_commit(calender)
+	for _, appointment in ipairs(calender.appointments) do
 		if appointment:has_action(JIRA_ACTION) then
 			commit(appointment)
 		end
@@ -22,7 +24,7 @@ end
 --- @type ModuleOpts
 return {
 	name = "jira",
-	types = { 'carlender' },
+	types = { 'calender' },
 	setup = function(opts)
 		opts = opts or {}
 		commit = opts.commit or function(appointment) end

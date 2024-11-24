@@ -6,9 +6,10 @@ local function setup_today(opts)
 
 		vim.api.nvim_create_user_command(opts.command, function()
 			local today = Carlender:today()
-			if today ~= nil then
-				today:edit()
+			if today == nil then
+				return
 			end
+			today.source:open()
 		end, {})
 	end
 end

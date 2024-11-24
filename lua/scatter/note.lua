@@ -105,13 +105,19 @@ end
 --- @return boolean
 function Note:has_tag(name)
 	local bundle = self.source:get_bundle()
-	return vim.list_contains(bundle, name)
+	if bundle == nil then
+		return false
+	end
+	return vim.list_contains(bundle.tags, name)
 end
 
 --- @param pattern string | number
 --- @return string[]
 function Note:find_tags(pattern)
 	local bundle = self.source:get_bundle()
+	if bundle == nil then
+		return {}
+	end
 	local tags = {}
 	for _, tag in ipairs(bundle) do
 		if string.match(tag, pattern) then
@@ -125,118 +131,38 @@ end
 --- @return boolean
 function Note:has_action(action)
 	local bundle = self.source:get_bundle()
-	return vim.list_contains(bundle, action)
+	if bundle == nil then
+		return false
+	end
+	return vim.list_contains(bundle.actions, action)
 end
 
---- @return string?
-function Note:get_date()
-	return self.source:get_date()
-end
-
---- @return boolean, Note[]
-function Note:split()
-	if not self:has_action('~split') then
-		return false, { self }
-	end
-
-	local date = self:get_date()
-	if date == nil then
-		return false, { self }
-	end
-
-	--- @type Note[]
-	local notes = {}
-	for content in vim.gsplit(self.content, '~split') do
-		local note = Note:new(date)
-		note.source:modify(function() return vim.split(content, '\n', { plain = true }) end)
-		table.insert(notes, note)
-	end
-
-	return true, notes
-end
-
-function Note:run_code()
-	if not self:has_action('~run') then
+--- @return (fun(): CodeBlock?) | nil
+function Note:iter_code_rev()
+	local lines = self.source:get_lines()
+	if lines == nil then
 		return
 	end
 
-	for code_block in string.gmatch(self.content, '%s*```[^%s]+%s*~run[^`]+```') do
-		local lang, code = string.match(code_block, '```([^%s]+)%s*~run%s+(.+)```')
-
-		local command = nil
-		if lang == 'sh' then
-			command = { 'sh', '-c', code }
-		elseif lang == 'bash' then
-			command = { 'bash', '-c', code }
-		elseif lang == 'py' or lang == 'python' then
-			command = { 'python3', '-c', code }
-		elseif lang == 'lua' then
-			command = { 'lua', '-e', code }
-		elseif lang == 'js' or lang == 'javascript' then
-			command = { 'node', '-e', code }
-		else
-			return
+	local CodeBlock = require('scatter.note.code')
+	local index = #lines
+	return function()
+		local end_line = nil
+		while index > 0 do
+			local line = lines[index]
+			if string.find(line, '^```') then
+				if end_line == nil then
+					end_line = index
+				else
+					local start_line = index
+					index = index - 1
+					return CodeBlock:new(self, start_line, end_line)
+				end
+			end
+			index = index - 1
 		end
-		local output = vim.fn.system(command)
-
-		local code_block_pattern = string.gsub(code_block, "([^%w])", "%%%1")
-		self.content = string.gsub(self.content, code_block_pattern .. '%s*```output[^`]*```', code_block)
-
-		local output_md = '```output\n' .. output .. '\n```'
-		self.content = string.gsub(self.content, code_block_pattern, code_block .. '\n\n' .. output_md)
+		return nil
 	end
-
-	self:save()
-end
-
-function Note:generate_pandoc()
-	if not self:has_action('~pandoc-md') then
-		return
-	end
-
-	if vim.fn.executable('pandoc') == 0 then
-		print('pandoc is not installed')
-		return
-	end
-
-	--- @type string?, string?
-	local path, pandoc = string.match(self.content, '~pandoc%-md%s*([^%s]+)%s+(.+)')
-	if path == nil or pandoc == nil then
-		return
-	end
-
-	path = path:gsub('%.pdf$', '') + '.pdf'
-	path = vim.fs.joinpath(config.path, path)
-
-	local stdin = vim.loop.new_pipe(false)
-	local stdout = vim.loop.new_pipe(false)
-	local stderr = vim.loop.new_pipe(false)
-
-	vim.loop.read_start(stdout, function(_, data)
-		print(string.format('Output: %s', data))
-	end)
-	vim.loop.read_start(stderr, function(_, data)
-		print(string.format('Error: %s', data))
-	end)
-
-	local handle
-	handle = vim.loop.spawn('pandoc', {
-		args = { '--read', 'markdown', '--output', path },
-		stdio = { stdin, stdout, stderr },
-	}, function(code)
-		stdout:close()
-		stderr:close()
-		if handle ~= nil then
-			handle:close()
-		end
-
-		if code ~= 0 then
-			print('pandoc exited with code:', code)
-		end
-	end)
-
-	stdin:write(pandoc)
-	stdin:close()
 end
 
 return Note

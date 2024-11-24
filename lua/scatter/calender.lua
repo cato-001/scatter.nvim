@@ -1,10 +1,8 @@
 local util = require('scatter.util')
-local Appointment = require('scatter.calender.appointment')
 local config = require('scatter.config')
 
 --- @class Calender
 --- @field source Source
---- @field appointments Appointment[]
 local Calender = {}
 Calender.__index = Calender
 
@@ -17,7 +15,9 @@ function Calender:today()
 	end
 	local source = Source:from_date(date)
 	source:create_if_missing()
-	return Calender:from(source)
+	return setmetatable({
+		source = source,
+	}, self)
 end
 
 --- @param source Source
@@ -29,61 +29,38 @@ function Calender:from(source)
 
 	return setmetatable({
 		source = source,
-		appointments = {},
 	}, self)
 end
 
-function Calender:open()
-	self.source:open()
-end
-
-function Calender:file_exists()
-	local stat = vim.loop.fs_stat(self.path)
-	return stat ~= nil
-end
-
---- @return nil
-function Calender:_parse_appointments()
-	local content = self.source:_get_lines()
-	if content == nil or #content == 0 then
-		return
+--- @return (fun(): Appointment?) | nil
+function Calender:iter_appointments_rev()
+	local paragraph_iter = self.source:iter_paragraphs_rev()
+	if paragraph_iter == nil then
+		return nil
 	end
 
-	util.table_clear(self.appointments)
-
-	local appointment = nil
-	for _, line in ipairs(content) do
-		line = string.gsub(line, '^%s+', '')
-		line = string.gsub(line, '%s+$', '')
-		if line == '' then
-			if appointment ~= nil then
-				table.insert(self.appointments, appointment)
-				appointment = nil
+	local Appointment = require('scatter.calender.appointment')
+	--- @type Appointment?
+	local prev = nil
+	return function()
+		for paragraph in paragraph_iter do
+			local next = Appointment:from(paragraph)
+			if next == nil then
+				break
 			end
-		elseif appointment == nil then
-			appointment = Appointment:from_times(line)
-		else
-			appointment:add_comment(line)
+			if prev ~= nil then
+				if next.duration:is_empty() then
+					next.duration = prev.start_time - next.start_time
+				end
+				local appointment = prev
+				prev = next
+				return appointment
+			end
+			prev = next
 		end
-	end
-
-	self:_reorder_appointments()
-	self:_calculate_missing_appointment_duration()
-end
-
-function Calender:_reorder_appointments()
-	table.sort(self.appointments, function(appointment, other)
-		return appointment.start_time < other.start_time
-	end)
-end
-
-function Calender:_calculate_missing_appointment_duration()
-	for index, appointment in ipairs(self.appointments) do
-		local next_appointment = self.appointments[index + 1]
-		local missing_duration = appointment.duration == nil or appointment.duration:is_empty()
-		if missing_duration and next_appointment ~= nil then
-			appointment.duration = next_appointment.start_time - appointment.start_time
-		end
+		local appointment = prev
+		prev = nil
+		return appointment
 	end
 end
 

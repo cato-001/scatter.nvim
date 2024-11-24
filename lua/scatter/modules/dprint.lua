@@ -1,8 +1,4 @@
-local plugin = {}
-
-plugin.types = { 'note' }
-
-plugin.on_save = function()
+local function on_save()
 	local config = require('scatter.config')
 
 	if vim.fn.executable('dprint') == 0 then
@@ -14,4 +10,8 @@ plugin.on_save = function()
 	})
 end
 
-return plugin
+return {
+	name = 'dprint',
+	types = { 'note' },
+	on_save = on_save,
+}

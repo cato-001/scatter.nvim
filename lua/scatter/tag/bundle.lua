@@ -29,6 +29,7 @@ function Bundle:update_content(content)
 end
 
 function Bundle:_clear()
+	local util = require('scatter.util')
 	util.table_clear(self.tags)
 	util.table_clear(self.actions)
 	util.table_clear(self.persons)
@@ -62,8 +63,8 @@ function Bundle:get_all()
 	return all
 end
 
---- @return string
-function Bundle:to_string()
+--- @return string[]
+function Bundle:get_lines()
 	local lines = {}
 	if #self.tags ~= 0 then
 		local tags = table.concat(self.tags, ' ')
@@ -77,7 +78,12 @@ function Bundle:to_string()
 		local actions = table.concat(self.actions, ' ')
 		table.insert(lines, actions)
 	end
-	return table.concat(lines, '\n')
+	return lines
+end
+
+--- @return string
+function Bundle:to_string()
+	return table.concat(self:get_lines(), '\n')
 end
 
 return Bundle

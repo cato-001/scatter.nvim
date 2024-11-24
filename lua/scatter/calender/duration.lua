@@ -44,7 +44,7 @@ end
 
 --- @return boolean
 function Duration:is_empty()
-	return self.hours == nil and self.minutes == nil
+	return (self.hours == nil or self.hours == 0) and (self.minutes == nil or self.minutes == 0)
 end
 
 return Duration

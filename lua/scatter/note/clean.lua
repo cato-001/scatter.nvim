@@ -41,13 +41,13 @@ end
 M.split_notes = function()
 	local note_iter = require('scatter.note.iter')
 	for note in note_iter() do
-		local success, split_notes = note:split()
-		if success then
-			for _, split_note in ipairs(split_notes) do
-				split_note:save()
-			end
-			note:delete()
-		end
+		-- local success, split_notes = note:split()
+		-- if success then
+		-- for _, split_note in ipairs(split_notes) do
+		-- split_note:save()
+		-- end
+		-- note:delete()
+		-- end
 	end
 end
 

@@ -43,12 +43,15 @@ M.replace = function(text, mapping)
 	end)
 end
 
+--- @param text string
+--- @return string
 M.remove_all = function(text)
 	local pattern = require('scatter.tag.pattern')
 
 	local function remove_tag_char(tag)
 		return string.lower(string.sub(tag, 2))
 	end
+
 	local content = text
 	content = string.gsub(content, pattern.NORMAL, '')
 	content = string.gsub(content, pattern.PERSON, '')

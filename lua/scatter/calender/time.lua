@@ -6,8 +6,11 @@ Time.__index = Time
 
 --- @param hours number?
 --- @param minutes number?
---- @return Time
+--- @return Time?
 function Time:new(hours, minutes)
+	if hours == nil and minutes == nil then
+		return nil
+	end
 	hours = hours or 0
 	minutes = minutes or 0
 	return setmetatable({
@@ -46,6 +49,8 @@ end
 --- @param other Time | Duration
 --- @return Time | Duration | nil
 function Time:__sub(other)
+	local Duration = require('scatter.calender.duration')
+
 	local metatable = getmetatable(other)
 	if metatable == Time then
 		local minutes = self.minutes - other.minutes
