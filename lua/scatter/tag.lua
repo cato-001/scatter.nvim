@@ -22,7 +22,9 @@ M.load_all_tags = function()
 	local tags = {}
 	for note in note_iter() do
 		local bundle = note.source:get_bundle()
-		vim.list_extend(tags, bundle:get_all())
+		if bundle ~= nil then
+			vim.list_extend(tags, bundle:get_all())
+		end
 	end
 	for index = #tags, 1, -1 do
 		if is_timestamp(tags[index]) then
@@ -38,9 +40,10 @@ end
 --- @param mapping table<string, string>
 --- @return string
 M.replace = function(text, mapping)
-	return string.gsub(text, M.TAG_PATTERN, function(tag)
+	local text = string.gsub(text, M.TAG_PATTERN, function(tag)
 		return mapping[tag] or tag
 	end)
+	return text
 end
 
 --- @param text string
