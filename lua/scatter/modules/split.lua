@@ -1,6 +1,9 @@
 --- @param note Note
 --- @return boolean, Note[]
 local function split(note)
+	if note == nil then
+		return false, {}
+	end
 	if not note:has_action('~split') then
 		return false, { note }
 	end
