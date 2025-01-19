@@ -4,6 +4,7 @@ local function split(note)
 	if note == nil then
 		return false, {}
 	end
+	print(note)
 	if not note:has_action('~split') then
 		return false, { note }
 	end
