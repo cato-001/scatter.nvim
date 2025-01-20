@@ -92,7 +92,7 @@ function Source:get_path()
 			return nil
 		end
 		local config = require('scatter.config')
-		self.path = vim.fs.joinpath(config.carlender_path,
+		self.path = vim.fs.joinpath(config.calender_path,
 			'year-' .. date_year, 'month-' .. date_month, 'day-' .. date_day .. '.md')
 	end
 	return self.path

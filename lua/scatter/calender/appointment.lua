@@ -103,6 +103,7 @@ function Appointment:has_action(name)
 	return vim.list_contains(bundle.actions, name)
 end
 
+--- @param name string
 function Appointment:add_action(name)
 	if self:has_action(name) then
 		return
@@ -113,7 +114,29 @@ function Appointment:add_action(name)
 	end
 	table.insert(bundle.actions, name)
 	self.paragraph:modify(function(lines)
-		local new_lines = self:get_lines_editable({
+		local new_lines = self:get_lines({
+			bundle = bundle,
+		})
+		return new_lines or lines
+	end)
+end
+
+--- @param name string
+function Appointment:remove_action(name)
+	if not self:has_action(name) then
+		return
+	end
+	local bundle = self.paragraph:get_bundle()
+	if bundle == nil then
+		return
+	end
+	for i = #bundle.actions, 1, -1 do
+		if bundle.actions[i] == name then
+			table.remove(bundle.actions, i)
+		end
+	end
+	self.paragraph:modify(function(lines)
+		local new_lines = self:get_lines({
 			bundle = bundle,
 		})
 		return new_lines or lines
@@ -122,7 +145,7 @@ end
 
 --- @param changes {bundle: Bundle?}?
 --- @return string[]?
-function Appointment:get_lines_editable(changes)
+function Appointment:get_lines(changes)
 	changes = changes or {}
 	local header = self.start_time:to_string_functional()
 	if not self.duration:is_empty() then

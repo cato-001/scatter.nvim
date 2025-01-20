@@ -23,7 +23,7 @@ end
 --- @param source Source
 --- @return Calender | nil
 function Calender:from(source)
-	if not source:path_starts_with(config.carlender_path) then
+	if not source:path_starts_with(config.calender_path) then
 		return nil
 	end
 
