@@ -42,7 +42,7 @@ return {
 	types = { 'calender' },
 	setup = function(opts)
 		opts = opts or {}
-		commit = opts.commit or function(appointment) end
+		commit = opts.commit or commit
 	end,
 	commands = {
 		["JiraStage"] = run_stage,
