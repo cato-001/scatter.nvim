@@ -16,9 +16,10 @@ local function parse_time_with_duration(value)
 	local Time = require('scatter.calender.time')
 	local Duration = require('scatter.calender.duration')
 
-	local hour, minute, finish = string.match(value, '^(%d%d?)$')
+	local minute, finish = nil, nil
+	local hour, _ = string.match(value, '^(%d%d?)(%s+.*)?$')
 	if hour == nil then
-		hour, minute, finish = string.match(value, '^(%d%d?):?(%d%d)%s*(.*)$')
+		hour, minute, finish = string.match(value, '^(%d%d?):?(%d%d)%s+(.*)$')
 	end
 	local start_time = Time:new(tonumber(hour), tonumber(minute))
 	if start_time == nil then
