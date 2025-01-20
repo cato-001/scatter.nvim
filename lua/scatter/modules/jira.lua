@@ -2,6 +2,7 @@ local JIRA_ACTION = '~jira'
 
 --- @type fun(appointment: Appointment)
 local commit = function(appointment)
+	print('commit', vim.inspect(appointment.paragraph:get_bundle()), appointment:to_string_pretty())
 end
 
 --- @param calender Calender
@@ -20,7 +21,6 @@ local function run_commit(calender)
 		local iter = calender:iter_appointments_rev()
 		local appointment = nil
 		for next in iter do
-			print('commit', vim.inspect(next.paragraph:get_bundle()), next:to_string_pretty())
 			if next:has_action(JIRA_ACTION) then
 				appointment = next
 				break

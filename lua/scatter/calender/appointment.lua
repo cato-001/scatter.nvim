@@ -16,17 +16,13 @@ local function parse_time_with_duration(value)
 	local Time = require('scatter.calender.time')
 	local Duration = require('scatter.calender.duration')
 
-	print('time line', value)
 	local hour, minute, finish = string.match(value, '^(%d%d?)$')
-	print('hour1', vim.inspect(hour))
 	if hour == nil then
 		hour = string.match(value, '^(%d%d?)%s')
 	end
-	print('hour2', vim.inspect(hour))
 	if hour == nil then
 		hour, minute, finish = string.match(value, '^(%d%d?):?(%d%d)%s*(.*)$')
 	end
-	print('hour3', vim.inspect(hour), vim.inspect(minute), vim.inspect(finish))
 	local start_time = Time:new(tonumber(hour), tonumber(minute))
 	if start_time == nil then
 		return nil, nil
