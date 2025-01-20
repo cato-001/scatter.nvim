@@ -24,7 +24,7 @@ local function parse_time_with_duration(value)
 	end
 	print('hour2', vim.inspect(hour))
 	if hour == nil then
-		hour, minute, finish = string.match(value, '^(%d%d?):?(%d%d)%s+(.*)$')
+		hour, minute, finish = string.match(value, '^(%d%d?):?(%d%d)%s*(.*)$')
 	end
 	print('hour3', vim.inspect(hour), vim.inspect(minute), vim.inspect(finish))
 	local start_time = Time:new(tonumber(hour), tonumber(minute))
