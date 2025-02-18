@@ -13,8 +13,8 @@ Appointment.__index = Appointment
 --- @return Time?
 --- @return Duration?
 local function parse_time_with_duration(value)
-	local Time = require('scatter.calender.time')
-	local Duration = require('scatter.calender.duration')
+	local Time = require('scatter.calendar.time')
+	local Duration = require('scatter.calendar.duration')
 
 	local hour, minute, finish = string.match(value, '^(%d%d?)$')
 	if hour == nil then

@@ -35,7 +35,7 @@ end
 --- @param other Duration
 --- @return Time?
 function Time:__add(other)
-	local Duration = require('scatter.calender.duration')
+	local Duration = require('scatter.calendar.duration')
 
 	local metatable = getmetatable(other)
 	if metatable == Duration then
@@ -49,7 +49,7 @@ end
 --- @param other Time | Duration
 --- @return Time | Duration | nil
 function Time:__sub(other)
-	local Duration = require('scatter.calender.duration')
+	local Duration = require('scatter.calendar.duration')
 
 	local metatable = getmetatable(other)
 	if metatable == Time then

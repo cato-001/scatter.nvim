@@ -79,17 +79,17 @@ M.on_save = function(source)
 	end
 
 	local Note = require('scatter.note')
-	local Calender = require('scatter.calender')
+	local Calender = require('scatter.calendar')
 
 	local note = Note:from(source)
-	local calender = Calender:from(source)
+	local calendar = Calender:from(source)
 
 	for _, plugin in pairs(M._modules) do
 		if note ~= nil and plugin.should_run('note') then
 			plugin.on_save(note)
 		end
-		if calender ~= nil and plugin.should_run('calender') then
-			plugin.on_save(calender)
+		if calendar ~= nil and plugin.should_run('calendar') then
+			plugin.on_save(calendar)
 		end
 	end
 end
@@ -102,11 +102,11 @@ M.attach_commands = function(source)
 	end
 
 	local Note = require('scatter.note')
-	local Calender = require('scatter.calender')
+	local Calender = require('scatter.calendar')
 
 	local note = Note:from(source)
-	local calender = Calender:from(source)
-	if note == nil and calender == nil then
+	local calendar = Calender:from(source)
+	if note == nil and calendar == nil then
 		return
 	end
 
@@ -115,15 +115,15 @@ M.attach_commands = function(source)
 			if note ~= nil and module.should_run('note') then
 				vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(note) end })
 				vim.api.nvim_buf_create_user_command(buffer, name, function() callback(note) end, {})
-			elseif calender ~= nil and module.should_run('calender') then
-				vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calender) end })
-				vim.api.nvim_buf_create_user_command(buffer, name, function() callback(calender) end, {})
+			elseif calendar ~= nil and module.should_run('calendar') then
+				vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calendar) end })
+				vim.api.nvim_buf_create_user_command(buffer, name, function() callback(calendar) end, {})
 			end
 		end
 		if note ~= nil and module.should_run('note') then
 			vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(note) end })
-		elseif calender ~= nil and module.should_run('calender') then
-			vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calender) end })
+		elseif calendar ~= nil and module.should_run('calendar') then
+			vim.api.nvim_create_autocmd('BufWritePost', { callback = function() module.on_save(calendar) end })
 		end
 	end
 end

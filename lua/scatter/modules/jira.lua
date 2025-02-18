@@ -5,20 +5,20 @@ local commit = function(appointment)
 	print('commit', vim.inspect(appointment.paragraph:get_bundle()), appointment:to_string_pretty())
 end
 
---- @param calender Calender
-local function run_stage(calender)
-	for appointment in calender:iter_appointments_rev() do
+--- @param calendar Calender
+local function run_stage(calendar)
+	for appointment in calendar:iter_appointments_rev() do
 		if appointment:has_tag('#work') then
 			appointment:add_action(JIRA_ACTION)
 		end
 	end
 end
 
---- @param calender Calender
-local function run_commit(calender)
+--- @param calendar Calender
+local function run_commit(calendar)
 	--- @return Appointment?
 	local function commit_next_appointment()
-		local iter = calender:iter_appointments_rev()
+		local iter = calendar:iter_appointments_rev()
 		local appointment = nil
 		for next in iter do
 			if next:has_action(JIRA_ACTION) then
@@ -39,7 +39,7 @@ end
 --- @type ModuleOpts
 return {
 	name = "jira",
-	types = { 'calender' },
+	types = { 'calendar' },
 	setup = function(opts)
 		opts = opts or {}
 		commit = opts.commit or commit

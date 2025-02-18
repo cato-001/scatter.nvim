@@ -23,7 +23,7 @@ end
 --- @param source Source
 --- @return Calender | nil
 function Calender:from(source)
-	if not source:path_starts_with(config.calender_path) then
+	if not source:path_starts_with(config.calendar_path) then
 		return nil
 	end
 
@@ -39,7 +39,7 @@ function Calender:iter_appointments_rev()
 		return nil
 	end
 
-	local Appointment = require('scatter.calender.appointment')
+	local Appointment = require('scatter.calendar.appointment')
 	--- @type Appointment?
 	local prev = nil
 	return function()
